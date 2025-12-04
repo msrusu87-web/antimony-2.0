@@ -204,26 +204,121 @@ pub async fn mempool_transaction(
 
 /// /account/balance - Get account balance
 pub async fn account_balance(
+    State(state): State<AppState>,
     Json(req): Json<AccountBalanceRequest>,
 ) -> ApiResult<Json<AccountBalanceResponse>> {
     if !is_mainnet(&req.network_identifier) {
         return Err(ApiError::NetworkNotFound(req.network_identifier.network));
     }
 
-    // TODO: Query UTXO set for account balance
-    Err(ApiError::NotImplemented("account/balance".to_string()))
+    // Get address from account identifier
+    let address = &req.account_identifier.address;
+
+    // Get best block for response
+    let best_height = state.storage.get_best_height()
+        .map_err(|e| ApiError::Internal(e.to_string()))?
+        .unwrap_or(0);
+    
+    let current_block = state.storage.get_block(best_height)
+        .map_err(|e| ApiError::Internal(e.to_string()))?;
+    
+    let (current_height, current_hash) = if let Some(block) = current_block {
+        let hash = block.hash();
+        (best_height, hex::encode(hash.as_bytes()))
+    } else {
+        (0, format!("{:064x}", 0))
+    };
+
+    // Query UTXO set for this address
+    let utxos = state.storage.get_utxos_for_address(address)
+        .map_err(|e| ApiError::Internal(e.to_string()))?;
+
+    // Calculate total balance in satoshis
+    let total_satoshis: i64 = utxos.iter().map(|u| u.amount as i64).sum();
+
+    // Create balance response
+    let balances = vec![Amount {
+        value: total_satoshis.to_string(),
+        currency: Currency::atmn(),
+        metadata: None,
+    }];
+
+    // Optionally include coins
+    let coins = if !utxos.is_empty() {
+        Some(utxos.iter().enumerate().map(|(idx, utxo)| {
+            Coin {
+                coin_identifier: CoinIdentifier {
+                    identifier: format!("{}:{}", hex::encode(utxo.tx_hash.as_bytes()), utxo.output_index),
+                },
+                amount: Amount {
+                    value: (utxo.amount as i64).to_string(),
+                    currency: Currency::atmn(),
+                    metadata: None,
+                },
+            }
+        }).collect())
+    } else {
+        None
+    };
+
+    Ok(Json(AccountBalanceResponse {
+        block_identifier: BlockIdentifier::new(current_height, current_hash),
+        balances,
+        coins,
+        metadata: None,
+    }))
 }
 
 /// /account/coins - Get spendable coins (UTXOs)
 pub async fn account_coins(
+    State(state): State<AppState>,
     Json(req): Json<AccountCoinsRequest>,
 ) -> ApiResult<Json<AccountCoinsResponse>> {
     if !is_mainnet(&req.network_identifier) {
         return Err(ApiError::NetworkNotFound(req.network_identifier.network));
     }
 
-    // TODO: Query UTXO set for account coins
-    Err(ApiError::NotImplemented("account/coins".to_string()))
+    // Get address from account identifier
+    let address = &req.account_identifier.address;
+
+    // Get best block for response
+    let best_height = state.storage.get_best_height()
+        .map_err(|e| ApiError::Internal(e.to_string()))?
+        .unwrap_or(0);
+    
+    let current_block = state.storage.get_block(best_height)
+        .map_err(|e| ApiError::Internal(e.to_string()))?;
+    
+    let (current_height, current_hash) = if let Some(block) = current_block {
+        let hash = block.hash();
+        (best_height, hex::encode(hash.as_bytes()))
+    } else {
+        (0, format!("{:064x}", 0))
+    };
+
+    // Query UTXO set for this address
+    let utxos = state.storage.get_utxos_for_address(address)
+        .map_err(|e| ApiError::Internal(e.to_string()))?;
+
+    // Convert UTXOs to Rosetta Coins
+    let coins = utxos.iter().map(|utxo| {
+        Coin {
+            coin_identifier: CoinIdentifier {
+                identifier: format!("{}:{}", hex::encode(utxo.tx_hash.as_bytes()), utxo.output_index),
+            },
+            amount: Amount {
+                value: (utxo.amount as i64).to_string(),
+                currency: Currency::atmn(),
+                metadata: None,
+            },
+        }
+    }).collect();
+
+    Ok(Json(AccountCoinsResponse {
+        block_identifier: BlockIdentifier::new(current_height, current_hash),
+        coins,
+        metadata: None,
+    }))
 }
 
 /// /construction/preprocess - Initial validation
