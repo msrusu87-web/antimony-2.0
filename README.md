@@ -1,219 +1,342 @@
 # ANTIMONY COIN 2.0 🪨
 
-> **The Enterprise-Grade AI-Powered Payment & DeFi Chain**
+> **High-Performance Payment & Settlement Layer**
 
-[![Status](https://img.shields.io/badge/Status-Pre--Launch-orange)](https://github.com/msrusu87-web/antimony-2.0)
-[![Network](https://img.shields.io/badge/Network-Live%20Testnet-blue)](https://explorer.carphatian.ro)
-[![Version](https://img.shields.io/badge/Version-2.0-brightgreen)](https://github.com/msrusu87-web/antimony-2.0/releases)
+[![Status](https://img.shields.io/badge/Status-Phase%202%20Development-orange)](https://github.com/msrusu87-web/antimony-2.0)
+[![Consensus](https://img.shields.io/badge/Consensus-Pure%20PoW-blue)](./CONSENSUS_IMPLEMENTATION.md)
+[![Language](https://img.shields.io/badge/Language-Rust%20%26%20TypeScript-brightgreen)](https://github.com/msrusu87-web/antimony-2.0)
+[![Tests](https://img.shields.io/badge/Tests-26%2F26%20Passing-success)](./PHASE2A_COMPLETION_REPORT.md)
 
 ## Quick Start
 
 ### What is ATMN 2.0?
 
-Antimony Coin 2.0 is a next-generation blockchain combining:
+Antimony Coin 2.0 is a high-performance blockchain designed for:
 
-- **⚡ EVM Compatibility** - Deploy Ethereum smart contracts instantly
-- **🤖 AI Integration** - On-chain AI inference and model marketplace
-- **🌉 Cross-Chain** - Bridges to Ethereum, Polygon, Solana, BSC
-- **🏛️ Governance** - Community-driven DAO with real decision power
-- **💰 Real Assets** - Tokenize real estate, commodities, stocks
-- **⏱️ Lightning Fast** - 12-second blocks, 0.0001 ATMN transactions
+- **⚡ Fast Settlements** - 12-second blocks, 0.0001 ATMN transaction fees
+- **🪙 Pure Proof-of-Work** - SHA-256d consensus (proven by Bitcoin 15+ years)
+- **📊 High Throughput** - Scalable payment settlement layer
+- **🔒 Security First** - Difficulty adjustment prevents manipulation
+- **🏗️ Modular Architecture** - Foundation for future features (EVM, AI, bridges)
+- **💼 Enterprise Ready** - Rosetta API compatible for exchanges
+
+## Current Architecture
+
+```
+ATMN 2.0 - Phase 2: Consensus Foundation
+
+✅ COMPLETE:
+- SHA-256d hashing engine
+- Difficulty adjustment algorithm
+- Block validation framework
+- Proof-of-Work verification
+
+🚧 IN PROGRESS:
+- Merkle tree implementation
+- Full block validation pipeline
+- Storage integration (RocksDB)
+
+📋 PLANNED:
+- EVM compatibility layer (Phase 3)
+- Cross-chain bridges (Phase 4)
+- AI inference module (Phase 4+)
+- DAO governance (Phase 4+)
+```
 
 ## Key Specifications
 
 ```
 Total Supply:          500,000,000 ATMN
 Block Time:            12 seconds
-Block Reward (Year 1): 50 ATMN (Year 1), 25 ATMN (Year 2), 12.5 ATMN (Year 3+)
-PoW Algorithm:         PHI1612 (ASIC-resistant)
-Consensus:             PoW + Masternode (100,000 ATMN collateral initially)
-Smart Contracts:       Solidity (EVM-compatible)
-Network Ports:         7676 (P2P), 7674 (RPC), 7673 (WebSocket)
-Address Format:        Bech32 (A-prefix for mainnet, TA-prefix for testnet)
+Block Reward:          50 ATMN (Year 1) → 25 → 12.5 → 6.25+ ATMN
+PoW Algorithm:         SHA-256d (Bitcoin-compatible)
+Consensus:             Pure Proof-of-Work (100% to miners)
+Difficulty Adjustment: Every 2,016 blocks (~4 hours)
+Network Type:          Mainnet / Testnet / Regtest
+Address Format:        BIP32/BIP39/BIP44 (HD wallets)
+Ports:                 (Configurable per network)
 ```
 
-## Architecture
+## Project Structure
 
 ```
-├── atmn-core/              # Core blockchain implementation
-│   ├── consensus/          # PoW/PoS consensus engine
-│   ├── network/            # P2P networking layer
-│   ├── storage/            # LevelDB state management
-│   └── ai-module/          # On-chain AI inference
+atmn-2.0/
+├── atmn-core/                      # Core blockchain (ACTIVE - Phase 2)
+│   ├── src/
+│   │   ├── lib.rs                  # Main entry point
+│   │   ├── types.rs                # BlockHash, TxHash, Amount, etc.
+│   │   ├── error.rs                # Error types
+│   │   ├── chain_params.rs         # Network parameters (mainnet/testnet/regtest)
+│   │   ├── block.rs                # Block structures and validation
+│   │   ├── transaction.rs          # Transaction types
+│   │   ├── consensus.rs            # SHA-256d PoW engine ✅ IMPLEMENTED
+│   │   ├── storage.rs              # Database abstraction (RocksDB)
+│   │   ├── network.rs              # P2P networking skeleton
+│   │   └── rosetta.rs              # Rosetta API support (preparation)
+│   ├── Cargo.toml
+│   └── tests/
 │
-├── atmn-evm/               # EVM compatibility layer
-│   ├── contracts/          # Smart contract templates
-│   ├── precompiles/        # EVM precompiled contracts
-│   └── runtime/            # Execution environment
-│
-├── atmn-explorer/          # Block explorer
-│   ├── frontend/           # React SPA
-│   ├── backend/            # Node.js GraphQL API
-│   └── indexer/            # Real-time indexing
-│
-├── atmn-wallet-web/        # Web wallet
-│   ├── src/                # React components
-│   └── contracts/          # Wallet smart contracts
-│
-├── atmn-wallet-windows/    # Windows desktop wallet
-├── atmn-wallet-macos/      # macOS desktop wallet
-├── atmn-mining-pool/       # Mining pool (Stratum protocol)
-├── atmn-bridge/            # Cross-chain bridges
-├── atmn-contracts/         # Smart contract libraries
-├── atmn-docs/              # Developer documentation
-└── atmn-tests/             # Comprehensive test suite
+├── SPECIFICATIONS.md               # Complete technical specifications (19 sections)
+├── CONSENSUS_IMPLEMENTATION.md     # SHA-256d algorithm documentation
+├── PHASE2_PLAN.md                  # Phase 2 implementation roadmap
+├── PHASE2A_COMPLETION_REPORT.md    # Current phase status & achievements
+├── QUICKSTART.md                   # Developer quick-start guide
+├── CONTRIBUTING.md                 # Contributing guidelines
+├── LICENSE.md                      # MIT + non-aggressive patents
+├── README.md                        # This file
+└── .gitignore
+
+Planned (Future Phases):
+├── atmn-evm/          # EVM compatibility layer (Phase 3)
+├── atmn-storage/      # Full storage implementation (Phase 3)
+├── atmn-mining/       # Mining system & pool (Phase 3)
+├── atmn-network/      # P2P networking (Phase 3)
+├── atmn-wallet/       # Web/desktop wallets (Phase 4)
+├── atmn-bridge/       # Cross-chain bridges (Phase 4)
+└── atmn-explorer/     # Block explorer (Phase 4)
 ```
 
-## Domains
+## Current Status
 
-| Service | Domain |
-|---------|--------|
-| **Main Website** | https://antimony.carphatian.ro |
-| **Block Explorer** | https://explorer.carphatian.ro |
-| **Web Wallet** | https://antimony.carphatian.ro/wallet |
-| **Mining Pool** | pool.antimony.carphatian.ro:5555 |
-| **RPC Endpoint** | https://rpc.antimony.carphatian.ro |
-| **WebSocket** | ws://ws.antimony.carphatian.ro |
+### Phase 2a: Consensus Engine ✅ COMPLETE
+- ✅ SHA-256d hashing implementation
+- ✅ Difficulty adjustment algorithm
+- ✅ Block hash verification
+- ✅ 26/26 tests passing (100%)
+- ✅ Production-ready code
+- ✅ Comprehensive documentation (410+ lines)
+
+**See:** [PHASE2A_COMPLETION_REPORT.md](./PHASE2A_COMPLETION_REPORT.md)
+
+### Phase 2b: Block Validation (IN PROGRESS)
+- 🚧 Merkle tree implementation
+- 🚧 Full block validation pipeline
+- 🚧 Coinbase transaction validation
+- 📅 Expected: 1-2 weeks
+
+### Phase 3: Storage & Mining (PLANNED)
+- 📋 RocksDB integration
+- 📋 UTXO set management
+- 📋 Mining nonce system
+- 📋 Block template creation
+- 📋 P2P networking
+- 📅 Expected: 4-6 weeks
 
 ## Quick Links
 
-- 📋 [Full Specifications](./SPECIFICATIONS.md)
-- 📖 [Developer Documentation](./atmn-docs/)
-- 🧪 [Test Suite](./atmn-tests/)
-- 💬 [Smart Contracts](./atmn-contracts/)
-- 🔗 [Bridge Documentation](./atmn-bridge/)
+- 📋 [Full Technical Specifications](./SPECIFICATIONS.md) - 19 sections, complete feature set
+- 📖 [Consensus Implementation](./CONSENSUS_IMPLEMENTATION.md) - SHA-256d details, security, performance
+- 🧪 [Phase 2 Completion Report](./PHASE2A_COMPLETION_REPORT.md) - Test results, metrics, roadmap
+- 🚀 [Quick Start Guide](./QUICKSTART.md) - Developer setup
+- 🤝 [Contributing Guidelines](./CONTRIBUTING.md) - How to contribute
+- ⚖️ [License](./LICENSE.md) - MIT with patents clause
 
 ## Development Roadmap
 
-### Phase 1: Foundation (Jan-Feb 2025) ⏳
+### Phase 1: Core Blockchain (COMPLETE ✅)
 - [x] Project initialization
-- [ ] Core blockchain implementation
-- [ ] EVM integration layer
-- [ ] AI module framework
-- [ ] Testnet deployment
+- [x] Technical specifications (19 sections)
+- [x] Pure PoW architecture (simplified from hybrid)
+- [x] Modular Rust project structure
+- [x] GitHub repository setup
 
-### Phase 2: Infrastructure (Mar 2025)
-- [ ] Block explorer
-- [ ] Web wallet
+### Phase 2: Consensus Foundation (IN PROGRESS 🚧)
+- [x] **2a: SHA-256d PoW Engine** ✅
+  - [x] SHA-256d hashing
+  - [x] Difficulty adjustment algorithm
+  - [x] Block validation framework
+  - [x] 26/26 tests passing
+  - [x] Comprehensive documentation
+  
+- 🚧 **2b: Block Validation** (1-2 weeks)
+  - Merkle tree implementation
+  - Full block validation pipeline
+  - Coinbase transaction validation
+  
+- 🚧 **2c: Storage & Mining** (2-4 weeks)
+  - RocksDB integration
+  - UTXO set management
+  - Mining nonce system
+
+### Phase 3: Infrastructure (PLANNED 📋)
+- [ ] Block explorer (web-based)
+- [ ] Web wallet (HD wallets, BIP39)
 - [ ] Desktop wallets (Windows/macOS)
-- [ ] Mining pool
+- [ ] Mining pool (Stratum protocol)
+- [ ] P2P networking (peer discovery, block propagation)
 
-### Phase 3: Testing (Apr 2025)
+### Phase 4: Advanced Features (PLANNED 📋)
+- [ ] EVM compatibility layer (smart contracts)
+- [ ] Cross-chain bridges
+- [ ] AI inference module
+- [ ] DAO governance
+- [ ] RWA tokenization
+
+### Phase 5: Launch & Ecosystem (PLANNED 📋)
 - [ ] Security audits
-- [ ] Community testnet
-- [ ] Cross-chain bridge testing
-- [ ] Performance optimization
-
-### Phase 4: Launch (May 2025)
 - [ ] Mainnet genesis
-- [ ] Mining activation
 - [ ] Exchange listings
-- [ ] Marketing campaign
+- [ ] Community marketing
 
-## Installation & Setup
+## Getting Started
 
-### Prerequisites
-- Linux (Ubuntu 20.04+ or similar)
-- Docker & Docker Compose
-- Node.js 18+
-- Go 1.20+
-- Rust 1.70+ (optional, for core development)
+### Development Prerequisites
+```
+- Rust 1.70+
+- Cargo (comes with Rust)
+- Git
+- Linux/macOS or WSL on Windows
+```
 
-### Clone & Initialize
+### Clone & Build
 ```bash
 git clone https://github.com/msrusu87-web/antimony-2.0.git
-cd antimony-2.0
-make init
+cd atmn-2.0
+
+# Install Rust (if needed)
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+
+# Build core library
+cd atmn-core
+cargo build --release
 ```
 
-### Run Testnet Node
+### Run Tests
 ```bash
 cd atmn-core
-./build.sh
-./atmn-node --testnet --log-level=info
+
+# Run all tests
+cargo test
+
+# Run specific module
+cargo test --lib consensus
+
+# Run with output
+cargo test --lib -- --nocapture
 ```
 
-### Deploy Smart Contracts
+### Documentation
 ```bash
-cd atmn-contracts
-npm install
-npm run deploy:testnet
+# Generate Rust documentation
+cargo doc --open
+
+# View specifications
+cat SPECIFICATIONS.md
+
+# View consensus details
+cat CONSENSUS_IMPLEMENTATION.md
 ```
 
 ## Security
 
-### Audits
-- [ ] Pre-launch security audit (Professional firm)
-- [ ] Smart contract audit (OpenZeppelin/Trail of Bits)
-- [ ] Consensus mechanism review (Academic experts)
+### Cryptographic Foundation
+- **Algorithm**: SHA-256d (proven by Bitcoin since 2009)
+- **Hashing**: 256-bit cryptographic security level
+- **Consensus**: Difficulty adjustment prevents manipulation
+- **Implementation**: Pure Rust with type safety
 
-### Bug Bounty
-- Maximum bounty: 5% of treasury (~1.5M ATMN)
-- Tiers: Critical (1M+), High (100K+), Medium (10K+), Low (1K+)
-- Submission: security@antimony.carphatian.ro
+### Planned Audits
+- [ ] Code review (internal + community)
+- [ ] Smart contract audit (when EVM layer added)
+- [ ] Consensus mechanism review (academic)
 
-## Community
+### Security Contact
+For security issues: security@antimony.carphatian.ro
 
-- **Twitter**: [@AtmonyOfficial](https://twitter.com/atmonyofficial)
-- **Discord**: [Join Server](https://discord.gg/atmony)
-- **Telegram**: [@AtmonyChat](https://t.me/atmony)
-- **GitHub**: [msrusu87-web/antimony-2.0](https://github.com/msrusu87-web/antimony-2.0)
+## Architecture & Design
+
+### Why Pure PoW?
+- **Proven**: 15+ years of Bitcoin operation
+- **Secure**: Resistant to 51% attacks with difficulty adjustment
+- **Simple**: Reduced attack surface vs. hybrid models
+- **Fair**: Equal opportunity for all miners
+- **Scalable**: Foundation for future layers (EVM, bridges, AI)
+
+### Simplification Strategy
+- Removed masternode layer (reduced complexity)
+- Removed governance DAO from consensus (can add via hardfork)
+- Focused on fast, reliable settlement layer
+- Pure PoW allows future features without consensus changes
 
 ## Contributing
 
-We welcome contributions from developers, designers, and community members!
+We welcome contributions at all levels:
 
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit changes (`git commit -m 'Add amazing feature'`)
-4. Push to branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+1. **Code Contributors**
+   - Fork the repo
+   - Create feature branch: `git checkout -b feature/my-feature`
+   - Commit: `git commit -m 'Add my feature'`
+   - Push: `git push origin feature/my-feature`
+   - Open Pull Request
+
+2. **Documentation Contributors**
+   - Improve specs, guides, or comments
+   - Submit via Pull Request
+
+3. **Testers**
+   - Report issues via GitHub Issues
+   - Help with consensus testing
 
 See [CONTRIBUTING.md](./CONTRIBUTING.md) for detailed guidelines.
 
 ## License
 
-This project is licensed under the MIT License with additional clauses:
-- Commercial use allowed with attribution
-- Patents: Non-aggressive patent clause
-- See [LICENSE.md](./LICENSE.md) for full details
+MIT License with additional clauses:
+- ✅ Commercial use allowed (with attribution)
+- ✅ Modifications allowed
+- ✅ Distribution allowed
+- ⚠️ Non-aggressive patent clause (see LICENSE.md)
 
 ## Disclaimer
 
-**⚠️ IMPORTANT**: This project is in active development. Do not send real funds to testnet addresses. All testnet coins have zero value.
+**⚠️ WARNING**: This project is in active development.
 
 - Use at your own risk
-- Security audits pending
+- Security audits pending completion
 - Blockchain technology is experimental
-- Past performance ≠ future results
+- Do not deploy production funds on testnet
+- Testnet coins have zero value
 
-## Support & Funding
+## Community
 
-### Development Grants
-Contact: funding@antimony.carphatian.ro
+- **GitHub**: [msrusu87-web/antimony-2.0](https://github.com/msrusu87-web/antimony-2.0)
+- **Issues**: [GitHub Issues](https://github.com/msrusu87-web/antimony-2.0/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/msrusu87-web/antimony-2.0/discussions)
 
-### Sponsorship
-- Platinum: $50,000+ (Mainnet naming rights)
-- Gold: $10,000+ (Docs sponsorship)
-- Silver: $5,000+ (Community support)
-- Bronze: $1,000+ (Bug bounty boost)
+## Technical References
 
-## Team
+### Implemented Standards
+- [Bitcoin PoW](https://en.bitcoin.it/wiki/Proof_of_work)
+- [SHA-256 (FIPS 180-4)](https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.180-4.pdf)
+- [BIP32/39/44 (Hierarchical Wallets)](https://github.com/bitcoin/bips)
 
-| Role | Name | GitHub |
-|------|------|--------|
-| Project Lead | Marian Rusu | [@msrusu87-web](https://github.com/msrusu87-web) |
-| TBD | TBD | TBD |
+### Planned Compatibility
+- [Rosetta API](https://www.rosetta-api.org/) - Exchange integration
+- [EIP-20 (Token Standard)](https://eips.ethereum.org/EIPS/eip-20) - When EVM added
+- [BIP141 (Segregated Witness)](https://github.com/bitcoin/bips/blob/master/bip-0141.mediawiki)
 
-## Acknowledgments
+## Project Status
 
-- Bitcoin Core team for blockchain foundations
-- Ethereum for EVM innovation
-- Cosmos SDK for modular design inspiration
-- Community testers and contributors
+| Component | Status | Progress | ETA |
+|-----------|--------|----------|-----|
+| Core PoW | ✅ Complete | 100% | Done |
+| Block Validation | 🚧 In Progress | 50% | 1-2 weeks |
+| Storage Layer | 📋 Planned | 0% | 2-4 weeks |
+| Mining System | 📋 Planned | 0% | 3-5 weeks |
+| EVM Layer | 📋 Future | 0% | Post-testnet |
+| Bridges | 📋 Future | 0% | Post-testnet |
+
+## Changelog
+
+### Phase 2a - SHA-256d Consensus (December 4, 2025)
+- ✅ Implemented SHA-256d hashing
+- ✅ Difficulty adjustment algorithm
+- ✅ Block hash verification
+- ✅ 26/26 tests passing
+- ✅ 410+ lines of documentation
 
 ---
 
-**Built with ❤️ for a decentralized future**
+**Built with ❤️ in Carpathia**
 
-Last Updated: December 4, 2025
+*Last Updated: December 4, 2025*
