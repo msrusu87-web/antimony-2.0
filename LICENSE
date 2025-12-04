@@ -1,0 +1,52 @@
+MIT License with Antimony-Specific Clauses
+
+Copyright (c) 2025 Antimony Foundation & Contributors
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+1. ATTRIBUTION: The above copyright notice and this permission notice shall be
+   included in all copies or substantial portions of the Software, and any
+   derivative work must acknowledge the original Antimony project.
+
+2. NON-AGGRESSIVE PATENT CLAUSE: No patent claim shall be asserted against
+   any individual or entity using this Software for non-commercial purposes.
+   Commercial use requires explicit written agreement with the Antimony Foundation.
+
+3. COMMUNITY FIRST: Any profits derived from commercial use should contribute
+   back to the Antimony ecosystem through the DAO treasury or community funds.
+
+4. BLOCKCHAIN CLAUSE: Any modification must be deployed transparently on the
+   Antimony blockchain or a compatible chain, allowing community audit.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+---
+
+DISCLAIMER FOR CRYPTOCURRENCY PROJECTS:
+
+This software implements a blockchain/cryptocurrency protocol. Participation
+in this network involves real financial risk:
+
+1. No guarantees of value or utility
+2. No insurance against loss of funds
+3. No reversal of transactions
+4. No liability for smart contract exploits
+5. No promise of exchange listing
+6. No promise of development continuation
+
+Use this software at your own risk.
+
+---
+
+For full terms, see LICENSE.md in the repository root.

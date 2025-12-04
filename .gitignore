@@ -1,0 +1,96 @@
+# Environment Files
+.env
+.env.local
+.env.*.local
+
+# Dependencies
+node_modules/
+package-lock.json
+yarn.lock
+Cargo.lock
+
+# Build Outputs
+/build
+/dist
+/target
+*.o
+*.so
+*.a
+*.dylib
+
+# IDE & Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+*.sublime-project
+*.sublime-workspace
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Data & State
+data/
+*.db
+*.leveldb
+.cache/
+
+# Keys & Secrets
+keys/
+secrets/
+*.key
+*.pem
+*.pk8
+*.der
+
+# Temporary Files
+tmp/
+temp/
+*.tmp
+.tmp/
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Testing
+coverage/
+.nyc_output/
+__coverage__
+.tap/
+
+# Docker
+.docker/
+docker-compose.override.yml
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.Python
+env/
+venv/
+.pytest_cache/
+
+# Wallet Files
+*.wallet
+wallet.dat
+blockchain.dat
+
+# Explorer
+.next/
+out/
+
+# Coverage
+lcov.info
+coverage
+
+# Misc
+.turbo/
