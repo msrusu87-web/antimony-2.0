@@ -2,7 +2,7 @@
 // Transaction structure and validation
 
 use serde::{Deserialize, Serialize};
-use crate::types::{TxHash, Amount, Address, Signature};
+use crate::types::{TxHash, Amount};
 use crate::error::Result;
 
 /// Transaction Input

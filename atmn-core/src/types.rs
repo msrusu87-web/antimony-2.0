@@ -6,7 +6,7 @@ use std::fmt;
 
 /// Block Hash - SHA256 double hash
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
-pub struct BlockHash([u8; 32]);
+pub struct BlockHash(pub [u8; 32]);
 
 impl BlockHash {
     pub fn from_bytes(bytes: [u8; 32]) -> Self {

@@ -2,7 +2,7 @@
 // Block structure and validation
 
 use serde::{Deserialize, Serialize};
-use crate::types::{BlockHash, BlockHeight, Amount, Timestamp, Difficulty, Nonce};
+use crate::types::{BlockHash, BlockHeight, Amount, Timestamp, Nonce};
 use crate::transaction::Transaction;
 use crate::error::Result;
 

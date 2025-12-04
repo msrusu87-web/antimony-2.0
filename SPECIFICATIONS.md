@@ -447,7 +447,158 @@ Phase 4: Launch (May 2025)
 
 ---
 
-## 17. COMPLIANCE & REGULATIONS
+## 16. ROSETTA INTEGRATION
+
+### Rosetta API Support
+Antimony implements **Rosetta v1.4.13** specification for standardized blockchain interaction:
+
+#### Network API
+```json
+{
+  "network": {
+    "blockchain": "Antimony",
+    "network": "mainnet",
+    "sub_network_identifier": null
+  },
+  "features": [
+    "balance_lookup",
+    "balance_tracking",
+    "account_creation",
+    "transaction_construction",
+    "transaction_submission",
+    "transaction_status"
+  ]
+}
+```
+
+#### Block Endpoints
+- `/block` - Get block data
+- `/block/transaction` - Get transaction in block
+- `/mempool` - Get pending transactions
+- `/mempool/transaction` - Get specific pending transaction
+
+#### Account Endpoints
+- `/account/balance` - Get account balance
+- `/account/coins` - Get spendable coins (UTXO model)
+
+#### Construction Endpoints
+- `/construction/metadata` - Get metadata for tx construction
+- `/construction/hash` - Broadcast and get tx hash
+- `/construction/parse` - Parse unsigned transaction
+- `/construction/payloads` - Create unsigned transaction
+- `/construction/preprocess` - Preprocess transaction
+- `/construction/submit` - Submit signed transaction
+
+### Benefits
+- ✅ Standard exchange integration
+- ✅ Reduced development time for wallets
+- ✅ Institutional-grade API
+- ✅ Cross-chain compatibility
+
+---
+
+## 17. COINBASE WALLET & EXCHANGE COMPATIBILITY
+
+### Coinbase Wallet Integration
+Antimony is discoverable in Coinbase Wallet via WalletConnect:
+
+#### Configuration
+```javascript
+{
+  "chainId": 7676,
+  "chainName": "Antimony",
+  "nativeCurrency": {
+    "name": "Antimony",
+    "symbol": "ATMN",
+    "decimals": 8
+  },
+  "rpcUrls": ["https://rpc.antimony.carphatian.ro"],
+  "blockExplorerUrls": ["https://explorer.antimony.carphatian.ro"],
+  "iconUrls": ["https://antimony.carphatian.ro/logo.png"]
+}
+```
+
+#### Supported Operations
+- ✅ Token transfers
+- ✅ Smart contract interactions (via EVM)
+- ✅ Balance queries
+- ✅ Transaction history
+- ✅ Gas estimation
+- ✅ Custom RPC methods
+
+### Coinbase Exchange Listing
+Roadmap for CEX integration:
+
+#### Phase 1: Community Listing (Post-Mainnet)
+- Market: ATMN/USD, ATMN/BTC
+- Minimum liquidity: $100K
+- Community vote for listing
+
+#### Phase 2: Standard Listing
+- Requirements:
+  - 24h volume: >$1M
+  - Market cap: >$50M
+  - Regulatory compliance: Completed
+  - Security audit: Completed
+  
+#### Phase 3: Prime Listing (Optional)
+- White-glove onboarding
+- Dedicated market support
+- Prime visibility on platform
+
+### Required Specifications for Exchange Listing
+
+#### Technical Requirements
+- ✅ Rosetta API implementation (already planned)
+- ✅ Public blockchain explorer
+- ✅ Standard RPC API
+- ✅ WebSocket support
+- ✅ Block finality: 12 seconds
+- ✅ Transaction irreversibility: 6 blocks (~72 seconds)
+
+#### Regulatory Requirements
+- ✅ Clear token classification
+- ✅ Use case documentation
+- ✅ Compliance officer contact
+- ✅ Smart contract audits
+- ✅ Risk disclosure
+
+#### Operational Requirements
+- ✅ Dedicated support contact
+- ✅ Technical documentation
+- ✅ On-chain monitoring
+- ✅ 24/7 availability target: 99.9%
+
+### Wallet Standards
+Antimony implements standard wallet support:
+
+#### BIP Standards
+- ✅ BIP32 - Hierarchical deterministic wallets
+- ✅ BIP39 - Mnemonic phrases
+- ✅ BIP44 - Multi-account hierarchy
+- ✅ BIP49 - SegWit-style addresses (future)
+- ✅ BIP141 - Block serialization (PoW standard)
+
+#### Token Standards (EVM layer)
+- ✅ ERC-20 - Token standard
+- ✅ ERC-721 - NFT standard
+- ✅ ERC-1155 - Multi-token standard
+
+### Integration Roadmap
+
+| Timeline | Milestone | Status |
+|----------|-----------|--------|
+| Week 1-2 | Rosetta API Implementation | Planned |
+| Week 3-4 | Coinbase Wallet Integration | Planned |
+| Week 5-6 | Block Explorer Enhancement | Planned |
+| Week 7-8 | Exchange API Testing | Planned |
+| Month 3 | Testnet with Coinbase | Planned |
+| Month 4 | CEX Listing Application | Planned |
+| Month 5+ | Mainnet CEX Support | Planned |
+
+---
+
+## 18. COMPLIANCE & REGULATIONS
 
 ```
 Jurisdictions:
@@ -465,7 +616,7 @@ KYC/AML:
 
 ---
 
-## Document Status
+## 19. DOCUMENT STATUS
 - **Version**: 1.0
 - **Last Updated**: December 4, 2025
 - **Next Review**: December 15, 2025
