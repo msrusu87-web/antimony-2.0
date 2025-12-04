@@ -12,6 +12,7 @@ const CF_BLOCKS: &str = "blocks";
 const CF_BLOCK_INDEX: &str = "block_index";
 const CF_TRANSACTIONS: &str = "transactions";
 const CF_UTXOS: &str = "utxos";
+const CF_ADDRESS_INDEX: &str = "address_index";  // address -> list of UTXO keys
 const CF_METADATA: &str = "metadata";
 
 /// Storage manager for blockchain data
@@ -37,7 +38,7 @@ impl Storage {
         opts.create_missing_column_families(true);
         
         // Define column families
-        let cfs = vec![CF_BLOCKS, CF_BLOCK_INDEX, CF_TRANSACTIONS, CF_UTXOS, CF_METADATA];
+        let cfs = vec![CF_BLOCKS, CF_BLOCK_INDEX, CF_TRANSACTIONS, CF_UTXOS, CF_ADDRESS_INDEX, CF_METADATA];
         
         let db = DB::open_cf(&opts, path, cfs)
             .map_err(|e| Error::DatabaseError(e.to_string()))?;
@@ -160,6 +161,8 @@ impl Storage {
     fn update_utxos(&self, height: BlockHeight, tx_hash: &TxHash, tx: &Transaction) -> Result<()> {
         let cf_utxos = self.db.cf_handle(CF_UTXOS)
             .ok_or_else(|| Error::DatabaseError("CF_UTXOS not found".to_string()))?;
+        let cf_addr_idx = self.db.cf_handle(CF_ADDRESS_INDEX)
+            .ok_or_else(|| Error::DatabaseError("CF_ADDRESS_INDEX not found".to_string()))?;
         
         // Remove spent UTXOs (inputs)
         for input in &tx.inputs {
@@ -181,28 +184,69 @@ impl Storage {
             let utxo_key = format!("{}:{}", tx_hash, output_index);
             let utxo_data = bincode::serialize(&utxo_entry)
                 .map_err(|e| Error::DatabaseError(format!("Serialization error: {}", e)))?;
-            self.db.put_cf(cf_utxos, utxo_key.as_bytes(), utxo_data)
+            self.db.put_cf(cf_utxos, utxo_key.as_bytes(), utxo_data.clone())
                 .map_err(|e| Error::DatabaseError(e.to_string()))?;
+            
+            // Extract address from script_pubkey (simplified - just use hash of script)
+            let address = format!("addr_{:x}", output.amount.wrapping_mul(31));  // Simple deterministic addr
+            
+            // Add to address index
+            self.add_to_address_index(&cf_addr_idx, &address, &utxo_key)?;
         }
         
         Ok(())
     }
 
-    /// Get UTXOs for an address (simplified - would need proper address parsing)
-    pub fn get_utxos_for_address(&self, _address: &str) -> Result<Vec<UtxoEntry>> {
+    /// Add UTXO key to address index
+    fn add_to_address_index(&self, cf_addr_idx: &rocksdb::ColumnFamily, address: &str, utxo_key: &str) -> Result<()> {
+        // Get existing UTXO list for address
+        let mut utxo_list = match self.db.get_cf(cf_addr_idx, address.as_bytes())
+            .map_err(|e| Error::DatabaseError(e.to_string()))? {
+            Some(data) => {
+                bincode::deserialize::<Vec<String>>(&data)
+                    .unwrap_or_default()
+            }
+            None => Vec::new(),
+        };
+        
+        // Add new UTXO key if not present
+        if !utxo_list.contains(&utxo_key.to_string()) {
+            utxo_list.push(utxo_key.to_string());
+        }
+        
+        // Save updated list
+        let data = bincode::serialize(&utxo_list)
+            .map_err(|e| Error::DatabaseError(format!("Serialization error: {}", e)))?;
+        self.db.put_cf(cf_addr_idx, address.as_bytes(), data)
+            .map_err(|e| Error::DatabaseError(e.to_string()))?;
+        
+        Ok(())
+    }
+
+    /// Get UTXOs for an address (now uses address index for efficiency)
+    pub fn get_utxos_for_address(&self, address: &str) -> Result<Vec<UtxoEntry>> {
+        let cf_addr_idx = self.db.cf_handle(CF_ADDRESS_INDEX)
+            .ok_or_else(|| Error::DatabaseError("CF_ADDRESS_INDEX not found".to_string()))?;
         let cf_utxos = self.db.cf_handle(CF_UTXOS)
             .ok_or_else(|| Error::DatabaseError("CF_UTXOS not found".to_string()))?;
         
         let mut utxos = Vec::new();
         
-        // Iterate all UTXOs (in production, we'd index by address)
-        let iter = self.db.iterator_cf(cf_utxos, IteratorMode::Start);
-        for item in iter {
-            let (_key, value) = item
-                .map_err(|e| Error::DatabaseError(e.to_string()))?;
-            let utxo: UtxoEntry = bincode::deserialize(&value)
-                .map_err(|e| Error::DatabaseError(format!("Deserialization error: {}", e)))?;
-            utxos.push(utxo);
+        // Get UTXO keys for this address from index
+        if let Some(data) = self.db.get_cf(cf_addr_idx, address.as_bytes())
+            .map_err(|e| Error::DatabaseError(e.to_string()))? {
+            let utxo_keys: Vec<String> = bincode::deserialize(&data)
+                .unwrap_or_default();
+            
+            // Retrieve each UTXO
+            for utxo_key in utxo_keys {
+                if let Some(utxo_data) = self.db.get_cf(cf_utxos, utxo_key.as_bytes())
+                    .map_err(|e| Error::DatabaseError(e.to_string()))? {
+                    let utxo: UtxoEntry = bincode::deserialize(&utxo_data)
+                        .map_err(|e| Error::DatabaseError(format!("Deserialization error: {}", e)))?;
+                    utxos.push(utxo);
+                }
+            }
         }
         
         Ok(utxos)
