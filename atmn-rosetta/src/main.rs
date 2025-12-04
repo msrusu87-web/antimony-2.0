@@ -1,15 +1,24 @@
 use axum::{
     routing::{get, post},
     Router,
+    extract::State,
 };
 use std::net::SocketAddr;
+use std::sync::Arc;
 use tower_http::cors::{Any, CorsLayer};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
+use atmn_core::Storage;
 
 mod handlers;
 mod types;
 mod error;
 mod converters;
+
+/// Application state shared across handlers
+#[derive(Clone)]
+pub struct AppState {
+    pub storage: Arc<Storage>,
+}
 
 #[tokio::main]
 async fn main() {
@@ -21,6 +30,23 @@ async fn main() {
         )
         .with(tracing_subscriber::fmt::layer())
         .init();
+
+    // Initialize storage
+    let storage_path = std::env::var("ATMN_DATA_DIR")
+        .unwrap_or_else(|_| "./data".to_string());
+    tracing::info!("Opening storage at: {}", storage_path);
+    
+    let storage = Storage::new(&storage_path)
+        .expect("Failed to initialize storage");
+    
+    // Initialize genesis block if needed
+    atmn_core::initialize_genesis(&storage)
+        .expect("Failed to initialize genesis block");
+    tracing::info!("Genesis block initialized");
+    
+    let state = AppState {
+        storage: Arc::new(storage),
+    };
 
     // Build CORS layer
     let cors = CorsLayer::new()
@@ -53,6 +79,7 @@ async fn main() {
         .route("/construction/submit", post(handlers::construction_submit))
         // Health check
         .route("/health", get(handlers::health))
+        .with_state(state)
         .layer(cors)
         .layer(tower_http::trace::TraceLayer::new_for_http());
 

@@ -1,8 +1,9 @@
 // Rosetta API endpoint handlers
-use axum::Json;
+use axum::{Json, extract::State};
 use crate::types::*;
 use crate::error::{ApiError, ApiResult};
 use crate::converters::*;
+use crate::AppState;
 
 /// Health check endpoint
 pub async fn health() -> &'static str {
@@ -83,25 +84,39 @@ pub async fn network_options(
 
 /// /network/status - Get current network status
 pub async fn network_status(
+    State(state): State<AppState>,
     Json(req): Json<NetworkStatusRequest>,
 ) -> ApiResult<Json<NetworkStatusResponse>> {
     if !is_mainnet(&req.network_identifier) {
         return Err(ApiError::NetworkNotFound(req.network_identifier.network));
     }
 
-    // TODO: Get actual blockchain state from atmn-core
-    // For now, return mock data
-    let current_height = 0;
-    let genesis_hash = format!("{:064x}", 0);
+    // Get actual blockchain state from storage
+    let best_height = state.storage.get_best_height()
+        .map_err(|e| ApiError::Internal(e.to_string()))?
+        .unwrap_or(0);
+    
+    // Get current block
+    let current_block = state.storage.get_block(best_height)
+        .map_err(|e| ApiError::Internal(e.to_string()))?;
+    
+    let (current_height, current_hash, current_timestamp) = if let Some(block) = current_block {
+        let hash = block.hash();
+        let timestamp = block.header.timestamp as i64 * 1000; // Convert to milliseconds
+        (best_height, hex::encode(hash.as_bytes()), timestamp)
+    } else {
+        // No blocks yet, return genesis placeholder
+        (0, format!("{:064x}", 0), 1701657600000)
+    };
 
     Ok(Json(NetworkStatusResponse {
-        current_block_identifier: BlockIdentifier::new(current_height, genesis_hash.clone()),
-        current_block_timestamp: 1701657600000, // Placeholder
-        genesis_block_identifier: BlockIdentifier::new(0, genesis_hash.clone()),
-        oldest_block_identifier: Some(BlockIdentifier::new(0, genesis_hash)),
+        current_block_identifier: BlockIdentifier::new(current_height, current_hash.clone()),
+        current_block_timestamp: current_timestamp,
+        genesis_block_identifier: BlockIdentifier::new(0, current_hash.clone()),
+        oldest_block_identifier: Some(BlockIdentifier::new(0, current_hash.clone())),
         sync_status: Some(SyncStatus {
-            current_index: Some(0),
-            target_index: Some(0),
+            current_index: Some(current_height as i64),
+            target_index: Some(current_height as i64),
             stage: Some("synced".to_string()),
             synced: Some(true),
         }),
@@ -111,43 +126,44 @@ pub async fn network_status(
 
 /// /block - Get block by height or hash
 pub async fn block(
+    State(state): State<AppState>,
     Json(req): Json<BlockRequest>,
 ) -> ApiResult<Json<BlockResponse>> {
     if !is_mainnet(&req.network_identifier) {
         return Err(ApiError::NetworkNotFound(req.network_identifier.network));
     }
 
-    // TODO: Query atmn-core for block data
-    // For now, return mock genesis block
-    if req.block_identifier.index == Some(0) || 
-       req.block_identifier.hash == Some(format!("{:064x}", 0)) {
+    // Get block from storage by height or hash
+    let block_opt = if let Some(height) = req.block_identifier.index {
+        state.storage.get_block(height as u64)
+            .map_err(|e| ApiError::Internal(e.to_string()))?
+    } else if let Some(hash_str) = &req.block_identifier.hash {
+        // Decode hex hash
+        let hash_bytes = hex::decode(hash_str)
+            .map_err(|_| ApiError::InvalidBlockIdentifier)?;
+        if hash_bytes.len() != 32 {
+            return Err(ApiError::InvalidBlockIdentifier);
+        }
+        let mut hash_array = [0u8; 32];
+        hash_array.copy_from_slice(&hash_bytes);
+        let block_hash = atmn_core::types::BlockHash::from_bytes(hash_array);
         
-        use atmn_core::block::BlockHeader;
-        use atmn_core::types::BlockHash;
-        use atmn_core::Block;
-        
-        let genesis_block = Block {
-            header: BlockHeader {
-                version: 1,
-                prev_block_hash: BlockHash::from_bytes([0; 32]),
-                merkle_root: BlockHash::from_bytes([0; 32]),
-                timestamp: 1701657600,
-                bits: 0x1d00ffff,
-                nonce: 0,
-            },
-            transactions: vec![],
-            height: 0,
-        };
+        state.storage.get_block_by_hash(&block_hash)
+            .map_err(|e| ApiError::Internal(e.to_string()))?
+    } else {
+        return Err(ApiError::InvalidBlockIdentifier);
+    };
 
-        let rosetta_block = block_to_rosetta(&genesis_block, 0);
-        
-        return Ok(Json(BlockResponse {
-            block: Some(rosetta_block),
-            other_transactions: None,
-        }));
-    }
-
-    Err(ApiError::BlockNotFound(format!("{:?}", req.block_identifier)))
+    let block = block_opt.ok_or_else(|| 
+        ApiError::BlockNotFound(format!("{:?}", req.block_identifier))
+    )?;
+    let height = block.height;
+    let rosetta_block = block_to_rosetta(&block, height);
+    
+    Ok(Json(BlockResponse {
+        block: Some(rosetta_block),
+        other_transactions: None,
+    }))
 }
 
 /// /block/transaction - Get specific transaction in block

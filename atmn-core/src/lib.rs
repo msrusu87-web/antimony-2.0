@@ -60,3 +60,5 @@ mod tests {
         assert_eq!(VERSION, "0.1.0");
     }
 }
+pub mod genesis;
+pub use genesis::{create_genesis_block, initialize_genesis};
