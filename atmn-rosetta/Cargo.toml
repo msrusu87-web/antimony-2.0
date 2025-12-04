@@ -1,0 +1,38 @@
+[package]
+name = "atmn-rosetta"
+version = "0.1.0"
+edition = "2021"
+authors = ["Antimony Development Team"]
+description = "Rosetta API server for Antimony blockchain"
+
+[dependencies]
+# Web framework
+axum = "0.7"
+tokio = { version = "1.35", features = ["full"] }
+tower = "0.4"
+tower-http = { version = "0.5", features = ["cors", "trace"] }
+
+# Serialization
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+# Logging
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+# Error handling
+anyhow = "1.0"
+thiserror = "1.0"
+
+# Hex encoding
+hex = "0.4"
+
+# ATMN core
+atmn-core = { path = "../atmn-core" }
+
+[dev-dependencies]
+reqwest = { version = "0.11", features = ["json"] }
+
+[[bin]]
+name = "atmn-rosetta"
+path = "src/main.rs"
