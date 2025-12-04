@@ -38,13 +38,9 @@ Total Supply:                 500,000,000 ATMN
 - Blocks 1,051,201-2,628,000:     12.5 ATMN per block = 19,710,000 ATMN
 
 **Phase 3: Year 4+ (Blocks 2,628,001+)**
-- 6.25 ATMN per block (PoW phase)
-- Masternode rewards only after block 5,256,000
-
-**Phase 4: Transition to Pure PoW (Year 5+)**
-- After block 5,256,000: No mining rewards
-- Shift to governance/staking model only
-- Network security via validator set
+- 6.25 ATMN per block (indefinite)
+- Pure Proof-of-Work consensus only
+- Network secured entirely by miners
 
 ---
 
@@ -92,31 +88,32 @@ Testnet:
 
 ## 4. CONSENSUS & MINING
 
-### Phase 1: Hybrid PoW + Masternode (Year 1-4)
+### Pure Proof-of-Work (PoW) Consensus
 ```
 Block Distribution:
-├─ 70% PoW Miners
-├─ 25% Masternode Holders
-└─ 5% Treasury/Governance
+├─ 100% PoW Miners (simple & cost-effective)
+└─ Network secured by computational work only
 ```
 
-### Masternode Requirements
-- **Collateral**: 10,000 ATMN (after year 1)
-- **Uptime**: 95% required
-- **Hardware**: 2GB RAM, 10GB SSD minimum
-- **Annual ROI**: 15-20% (varies by network load)
+Design Rationale:
+- **Simplicity**: Single consensus mechanism (no masternode complexity)
+- **Cost-Effective**: No collateral requirements for validators
+- **Fair Distribution**: All participants earn via mining
+- **Decentralization**: Lower barrier to network participation
 
 ### Mining Algorithm
-- **PoW Algorithm**: PHI1612 (ASIC-resistant)
-- **Difficulty**: Retargets every 20 minutes
-- **Min Difficulty**: 1 ATMN value guarantee
+- **PoW Algorithm**: SHA-256d (Bitcoin-compatible, battle-tested)
+- **Difficulty**: Retargets every 2,016 blocks (~2 weeks)
+- **Mining Cost**: Standard GPU/CPU mining supported
+- **Hardware**: Consumer-grade GPUs or CPUs viable
 
 ### Mining Difficulty Adjustment
 ```
-Target: nTargetSpacing = 12 seconds
-Adjustment: max(prev_diff * 0.25, min(prev_diff * 4, new_target))
-Min Diff: 0.00000001
-Max Diff: nProofOfWorkLimit >> 20
+Target Timespan: 2 weeks (2,016 blocks)
+Difficulty Adjustment: (Actual Timespan / Target Timespan) * Previous Difficulty
+Adjustment Limits: 1x minimum, 4x maximum per period
+Min Difficulty: 1 (network bootstrapping)
+Max Difficulty: 2^224 - 1
 ```
 
 ---
@@ -172,40 +169,24 @@ Supported Models:
 └─ Custom WASM modules
 ```
 
-### AI Revenue Model
+### AI Revenue Model (Future)
 - **Execution Fee**: 0.001 ATMN per inference
-- **Creator Royalty**: 50% of fees
-- **Treasury**: 30% of fees
-- **Network Validators**: 20% of fees
+- **Creator Royalty**: 60% of fees
+- **Network Miners**: 40% of fees (via transaction fees)
 
 ---
 
 ## 7. GOVERNANCE & DAO
 
-### Governance Token
-- **1 ATMN = 1 Vote** (staked)
-- **Voting Power**: Locked for 7 days minimum
-- **Proposal Threshold**: 10,000 ATMN collateral
-
-### Proposal Types
-1. **Parameter Changes**: Block rewards, fees, network params
-2. **Upgrade Governance**: Code changes, hardforks
-3. **Treasury Allocation**: Fund requests, grants
-4. **Community Initiatives**: Special projects
-
-### Voting Mechanics
-- **Voting Period**: 7 days
-- **Execution Delay**: 2 days after approval
-- **Quorum**: 40% of staked ATMN
-- **Approval**: 50% + 1 votes
+### Governance Model (Simplified, Future Enhancement)
+- **Current**: Miner-based governance (simple)
+- **Medium-term**: Community voting via staking
+- **Long-term**: DAO governance structure
 
 ### Treasury Management
-- **Annual Budget**: 5% of block rewards (~26.5M ATMN in Year 1)
-- **Allocation Categories**:
-  - Development: 40%
-  - Marketing: 25%
-  - Infrastructure: 20%
-  - Community Grants: 15%
+- **Current Phase**: No on-chain treasury
+- **Future**: Implement via hardfork
+- **Alternative**: Off-chain fund management by community members
 
 ---
 

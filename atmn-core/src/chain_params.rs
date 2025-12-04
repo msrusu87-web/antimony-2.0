@@ -123,29 +123,22 @@ impl ChainParams {
         }
     }
     
-    /// Get block reward for given height
+    /// Get block reward for given height (Pure PoW model)
     pub fn get_block_reward(&self, height: BlockHeight) -> Amount {
         match height {
             0 => self.genesis_subsidy,
             1..=525_600 => 50 * SATOSHI_PER_ATMN,  // Year 1: 50 ATMN
             525_601..=1_051_200 => 25 * SATOSHI_PER_ATMN,  // Year 2: 25 ATMN
             1_051_201..=2_628_000 => 12_500_000_000,  // Year 3: 12.5 ATMN (1250M satoshi)
-            _ => 6_250_000_000,  // Year 4+: 6.25 ATMN
+            _ => 6_250_000_000,  // Year 4+: 6.25 ATMN (indefinite)
         }
     }
     
-    /// Check if height is in mining phase
+    /// Check if height is in Proof-of-Work phase (all blocks use PoW)
     pub fn is_pow_phase(&self, height: BlockHeight) -> bool {
-        height < 5_256_000  // PoW for first 5 years
+        true  // Pure PoW indefinitely
     }
-    
-    /// Get masternode requirement for given height
-    pub fn masternode_requirement(&self, height: BlockHeight) -> Amount {
-        match height {
-            0..=525_600 => 100_000 * SATOSHI_PER_ATMN,  // Year 1: 100K ATMN
-            _ => 10_000 * SATOSHI_PER_ATMN,  // Year 2+: 10K ATMN
-        }
-    }
+
 }
 
 // Constants
@@ -175,10 +168,8 @@ pub const POW_LIMIT_REGTEST: [u8; 32] = [
     0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
 ];
 
-/// Block reward distribution
-pub const REWARD_POW_PERCENTAGE: u32 = 70;  // 70% to PoW miners
-pub const REWARD_MASTERNODE_PERCENTAGE: u32 = 25;  // 25% to masternodes
-pub const REWARD_TREASURY_PERCENTAGE: u32 = 5;  // 5% to treasury
+/// Block reward distribution (Pure PoW only)
+pub const REWARD_POW_PERCENTAGE: u32 = 100;  // 100% to PoW miners
 
 #[cfg(test)]
 mod tests {
@@ -212,20 +203,9 @@ mod tests {
     fn test_pow_phase() {
         let params = ChainParams::mainnet();
         
+        // Pure PoW: all heights are in PoW phase
         assert!(params.is_pow_phase(0));
-        assert!(params.is_pow_phase(5_256_000 - 1));
-        assert!(!params.is_pow_phase(5_256_000));
-    }
-
-    #[test]
-    fn test_masternode_requirement() {
-        let params = ChainParams::mainnet();
-        
-        // Year 1: 100K ATMN
-        assert_eq!(params.masternode_requirement(0), 100_000 * SATOSHI_PER_ATMN);
-        assert_eq!(params.masternode_requirement(525_600), 100_000 * SATOSHI_PER_ATMN);
-        
-        // Year 2+: 10K ATMN
-        assert_eq!(params.masternode_requirement(525_601), 10_000 * SATOSHI_PER_ATMN);
+        assert!(params.is_pow_phase(5_256_000));
+        assert!(params.is_pow_phase(10_000_000));
     }
 }
