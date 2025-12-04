@@ -94,3 +94,4 @@ coverage
 
 # Misc
 .turbo/
+/atmn-core/target
