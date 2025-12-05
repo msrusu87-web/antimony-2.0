@@ -70,7 +70,8 @@ pub fn target_to_bits(target: &[u8; 32]) -> u32 {
 }
 
 /// Convert bits representation to target (256-bit number)
-/// Bitcoin compact format: first byte is exponent, remaining 3 bytes are mantissa
+/// Bitcoin compact format: first byte is exponent (size), remaining 3 bytes are mantissa
+/// Target is stored in big-endian format (most significant byte at index 0)
 pub fn bits_to_target(bits: u32) -> [u8; 32] {
     let mut target = [0u8; 32];
     
@@ -79,27 +80,37 @@ pub fn bits_to_target(bits: u32) -> [u8; 32] {
     }
     
     let size = (bits >> 24) as usize;
-    let mantissa = bits & 0x00ffffff;
+    let word = bits & 0x00ffffff;
     
-    if size > 32 {
-        // Target is invalid (larger than 256 bits)
+    if size > 32 || size == 0 {
         return target;
     }
     
-    if size == 0 {
-        return target;
-    }
+    // Calculate the position from the end (big-endian)
+    // size indicates how many bytes from the right
+    let offset = 32 - size;
     
     if size <= 3 {
-        target[0] = (mantissa >> 8) as u8;
+        // For small sizes, shift the word right
+        let shift = 8 * (3 - size);
+        let adjusted_word = word >> shift;
+        target[offset] = ((adjusted_word >> 16) & 0xff) as u8;
+        if size >= 2 {
+            target[offset + 1] = ((adjusted_word >> 8) & 0xff) as u8;
+        }
+        if size >= 3 {
+            target[offset + 2] = (adjusted_word & 0xff) as u8;
+        }
     } else {
-        target[size - 3] = (mantissa & 0xff) as u8;
-        target[size - 2] = ((mantissa >> 8) & 0xff) as u8;
-        target[size - 1] = ((mantissa >> 16) & 0xff) as u8;
+        // Place the 3-byte mantissa at the correct position
+        target[offset] = ((word >> 16) & 0xff) as u8;
+        target[offset + 1] = ((word >> 8) & 0xff) as u8;
+        target[offset + 2] = (word & 0xff) as u8;
     }
     
     target
 }
+
 
 /// Verify if a block hash meets the target difficulty
 pub fn verify_hash_difficulty(hash: &BlockHash, target: &[u8; 32]) -> bool {

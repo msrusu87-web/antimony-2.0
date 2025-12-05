@@ -219,3 +219,128 @@ pub async fn set_default_wallet(pool: web::Data<SqlitePool>, path: web::Path<(St
         }))
     }
 }
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct DeleteWalletRequest {
+    pub email: String,
+    pub address: String,
+}
+
+// Delete a wallet
+pub async fn delete_wallet(pool: web::Data<SqlitePool>, req: web::Json<DeleteWalletRequest>) -> HttpResponse {
+    // Get user ID
+    let user_id: Option<i64> = match sqlx::query_scalar("SELECT id FROM users WHERE email = ?")
+        .bind(&req.email)
+        .fetch_optional(pool.get_ref())
+        .await {
+        Ok(Some(id)) => Some(id),
+        _ => return HttpResponse::NotFound().json(serde_json::json!({
+            "success": false,
+            "message": "User not found"
+        }))
+    };
+
+    if let Some(uid) = user_id {
+        // Check if it's the default wallet
+        let is_default: Option<bool> = sqlx::query_scalar(
+            "SELECT is_default FROM user_wallets WHERE user_id = ? AND wallet_address = ?"
+        )
+        .bind(uid)
+        .bind(&req.address)
+        .fetch_optional(pool.get_ref())
+        .await
+        .ok()
+        .flatten();
+
+        if is_default == Some(true) {
+            return HttpResponse::BadRequest().json(serde_json::json!({
+                "success": false,
+                "message": "Cannot delete default wallet. Set another wallet as default first."
+            }));
+        }
+
+        // Delete from user_wallets association
+        match sqlx::query("DELETE FROM user_wallets WHERE user_id = ? AND wallet_address = ?")
+            .bind(uid)
+            .bind(&req.address)
+            .execute(pool.get_ref())
+            .await {
+            Ok(_) => {
+                HttpResponse::Ok().json(serde_json::json!({
+                    "success": true,
+                    "message": "Wallet deleted successfully"
+                }))
+            },
+            Err(e) => {
+                log::error!("Delete wallet error: {}", e);
+                HttpResponse::InternalServerError().json(serde_json::json!({
+                    "success": false,
+                    "message": "Failed to delete wallet"
+                }))
+            }
+        }
+    } else {
+        HttpResponse::NotFound().json(serde_json::json!({
+            "success": false,
+            "message": "User not found"
+        }))
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct SetDefaultRequest {
+    pub email: String,
+    pub address: String,
+}
+
+// Set default wallet (alternative endpoint with JSON body)
+pub async fn set_default_wallet_json(pool: web::Data<SqlitePool>, req: web::Json<SetDefaultRequest>) -> HttpResponse {
+    // Get user ID
+    let user_id: Option<i64> = match sqlx::query_scalar("SELECT id FROM users WHERE email = ?")
+        .bind(&req.email)
+        .fetch_optional(pool.get_ref())
+        .await {
+        Ok(Some(id)) => Some(id),
+        _ => return HttpResponse::NotFound().json(serde_json::json!({
+            "success": false,
+            "message": "User not found"
+        }))
+    };
+
+    if let Some(uid) = user_id {
+        // Remove default from all wallets
+        let _ = sqlx::query("UPDATE user_wallets SET is_default = 0 WHERE user_id = ?")
+            .bind(uid)
+            .execute(pool.get_ref())
+            .await;
+
+        // Set new default
+        match sqlx::query(
+            "UPDATE user_wallets SET is_default = 1 
+             WHERE user_id = ? AND wallet_address = ?"
+        )
+        .bind(uid)
+        .bind(&req.address)
+        .execute(pool.get_ref())
+        .await {
+            Ok(_) => {
+                HttpResponse::Ok().json(serde_json::json!({
+                    "success": true,
+                    "message": "Default wallet updated"
+                }))
+            },
+            Err(e) => {
+                log::error!("Set default error: {}", e);
+                HttpResponse::InternalServerError().json(serde_json::json!({
+                    "success": false,
+                    "message": "Failed to set default wallet"
+                }))
+            }
+        }
+    } else {
+        HttpResponse::NotFound().json(serde_json::json!({
+            "success": false,
+            "message": "User not found"
+        }))
+    }
+}

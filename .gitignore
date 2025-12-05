@@ -1,97 +1,45 @@
-# Environment Files
-.env
-.env.local
-.env.*.local
+# Rust build artifacts
+**/target/
+**/*.rs.bk
+**/*.pdb
 
-# Dependencies
-node_modules/
-package-lock.json
-yarn.lock
-Cargo.lock
+# Backup files
+**/*.backup
+**/*.bak
+**/*.swp
+**/*.swo
+*~
 
-# Build Outputs
-/build
-/dist
-/target
-*.o
-*.so
-*.a
-*.dylib
-
-# IDE & Editor
+# IDE files
 .vscode/
 .idea/
-*.swp
-*.swo
-*~
-.DS_Store
-*.sublime-project
-*.sublime-workspace
+*.iml
 
-# Logs
-logs/
-*.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-
-# Data & State
-data/
-*.db
-*.leveldb
-.cache/
-
-# Keys & Secrets
-keys/
-secrets/
-*.key
-*.pem
-*.pk8
-*.der
-
-# Temporary Files
-tmp/
-temp/
-*.tmp
-.tmp/
-
-# OS
+# OS files
 .DS_Store
 Thumbs.db
-desktop.ini
 
-# Testing
-coverage/
-.nyc_output/
-__coverage__
-.tap/
+# Database files
+*.db
+*.db-shm
+*.db-wal
 
-# Docker
-.docker/
-docker-compose.override.yml
+# RocksDB data
+**/data/
 
-# Python
-__pycache__/
-*.py[cod]
-*$py.class
-.Python
-env/
-venv/
-.pytest_cache/
+# Logs
+*.log
 
-# Wallet Files
-*.wallet
-wallet.dat
-blockchain.dat
+# Temporary files
+/tmp/
+*.tmp
 
-# Explorer
-.next/
-out/
+# Environment files
+.env
+.env.local
 
-# Coverage
-lcov.info
-coverage
-
-# Misc
-.turbo/
-/atmn-core/target
+# Build outputs
+*.exe
+*.dll
+*.so
+*.dylib

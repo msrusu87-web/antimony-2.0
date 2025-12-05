@@ -26,6 +26,18 @@ pub enum Error {
     InvalidSignature,
     InvalidAddress,
     InsufficientBalance,
+    InvalidAmount,
+    
+    // Transaction errors
+    DuplicateTransaction,
+    TransactionTooLarge,
+    FeeTooLow,
+    
+    // Mempool errors
+    MempoolFull,
+    
+    // Serialization errors
+    SerializationError,
     
     // Network errors
     NetworkError(String),
@@ -51,6 +63,12 @@ impl fmt::Display for Error {
             Error::InvalidSignature => write!(f, "Invalid signature"),
             Error::InvalidAddress => write!(f, "Invalid address"),
             Error::InsufficientBalance => write!(f, "Insufficient balance"),
+            Error::InvalidAmount => write!(f, "Invalid amount"),
+            Error::DuplicateTransaction => write!(f, "Duplicate transaction in mempool"),
+            Error::TransactionTooLarge => write!(f, "Transaction size exceeds maximum"),
+            Error::FeeTooLow => write!(f, "Transaction fee too low"),
+            Error::MempoolFull => write!(f, "Mempool is full"),
+            Error::SerializationError => write!(f, "Serialization error"),
             Error::NetworkError(e) => write!(f, "Network error: {}", e),
             Error::Other(e) => write!(f, "Error: {}", e),
         }
@@ -69,5 +87,14 @@ mod tests {
     fn test_error_display() {
         let err = Error::InvalidBlockHeight(12345);
         assert_eq!(format!("{}", err), "Invalid block height: 12345");
+    }
+    
+    #[test]
+    fn test_mempool_errors() {
+        let err = Error::MempoolFull;
+        assert_eq!(format!("{}", err), "Mempool is full");
+        
+        let err = Error::FeeTooLow;
+        assert_eq!(format!("{}", err), "Transaction fee too low");
     }
 }

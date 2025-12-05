@@ -2,12 +2,15 @@ mod db;
 mod errors;
 mod handlers;
 mod models;
+mod mining_manager;
 
 use actix_web::{web, App, HttpServer, middleware::Logger};
 use actix_cors::Cors;
 use dotenv::dotenv;
 use sqlx::sqlite::{SqlitePool, SqlitePoolOptions};
 use std::env;
+use std::sync::Arc;
+use mining_manager::MiningManager;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
@@ -23,8 +26,12 @@ async fn main() -> std::io::Result<()> {
         .await
         .expect("Failed to create pool");
 
+    // Create mining manager
+    let mining_manager = Arc::new(MiningManager::new(database_url.clone()));
+
     log::info!("Starting ATMN API server...");
     log::info!("Database: {}", database_url);
+    log::info!("Mining manager initialized");
 
     HttpServer::new(move || {
         let cors = Cors::default()
@@ -35,6 +42,7 @@ async fn main() -> std::io::Result<()> {
 
         App::new()
             .app_data(web::Data::new(pool.clone()))
+            .app_data(web::Data::new(mining_manager.clone()))
             .wrap(Logger::default())
             .wrap(cors)
             .route("/health", web::get().to(handlers::health::health_check))
@@ -63,6 +71,13 @@ async fn main() -> std::io::Result<()> {
             .route("/api/mining/workers", web::get().to(handlers::mining::get_workers))
             .route("/api/mining/stats", web::get().to(handlers::mining::get_pool_stats))
             .route("/api/mining/payouts/{address}", web::get().to(handlers::mining::get_payouts))
+            // Mining control endpoints (NEW)
+            .route("/api/mining/start", web::post().to(handlers::mining::start_mining))
+            .route("/api/mining/stop", web::post().to(handlers::mining::stop_mining))
+            .route("/api/mining/status", web::get().to(handlers::mining::get_mining_status))
+            .route("/api/mining/template", web::get().to(handlers::mining::get_block_template))
+            .route("/api/mining/submit", web::post().to(handlers::mining::submit_block))
+            .route("/api/mempool/stats", web::get().to(handlers::mining::get_mempool_stats))
             // Fee collection endpoints
             .route("/api/fees/collect", web::post().to(handlers::fees::collect_fee))
             .route("/api/fees/master-wallet", web::get().to(handlers::fees::get_master_wallet_stats))
@@ -71,6 +86,8 @@ async fn main() -> std::io::Result<()> {
             .route("/api/user-wallets/{email}", web::get().to(handlers::wallets_new::get_user_wallets))
             .route("/api/user-wallets/create", web::post().to(handlers::wallets_new::create_new_wallet))
             .route("/api/user-wallets/{email}/default/{address}", web::post().to(handlers::wallets_new::set_default_wallet))
+            .route("/api/user-wallets/set-default", web::post().to(handlers::wallets_new::set_default_wallet_json))
+            .route("/api/user-wallets/delete", web::delete().to(handlers::wallets_new::delete_wallet))
             .route("/api/auth/2fa/status/{token}", web::get().to(handlers::auth::get_2fa_status))
             // Account balance endpoints (Phase 2d)
             .route("/api/account/balance/{address}", web::get().to(handlers::account::get_account_balance))

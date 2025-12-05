@@ -426,9 +426,165 @@ mod tests {
             merkle_root: BlockHash::zero(),
             timestamp: 1704067200,
             bits: 0x1d00ffff,
+
             nonce: 0,
         };
         let bytes = serialize_block_header(&header).unwrap();
-        assert_eq!(bytes.len(), 76); // 4+32+32+8+4+4 = 84... wait, timestamps are u32, not u64
+        assert_eq!(bytes.len(), 80); // 4+32+32+4+4+4 = 80 bytes
+    }
+}
+
+/// Create coinbase transaction for block reward
+pub fn create_coinbase_transaction(
+    miner_pubkey_script: Vec<u8>,
+    block_height: u64,
+    additional_fees: u64,
+) -> Transaction {
+    use crate::transaction::{TxInput, TxOutput};
+    use crate::types::TxHash;
+    
+    // Block reward: 50 ATMN = 50 * 100_000_000 satoshis
+    const BLOCK_REWARD_SATOSHIS: u64 = 50 * 100_000_000;
+    
+    // Total reward = block reward + transaction fees
+    let total_reward = BLOCK_REWARD_SATOSHIS + additional_fees;
+    
+    // Coinbase input (prev_tx_hash is zero, script contains block height)
+    let coinbase_input = TxInput {
+        prev_tx_hash: TxHash::from_bytes([0u8; 32]),
+        prev_tx_index: 0xFFFFFFFF,
+        script: block_height.to_le_bytes().to_vec(),
+        sequence: 0xFFFFFFFF,
+    };
+    
+    // Coinbase output (reward to miner)
+    let coinbase_output = TxOutput {
+        amount: total_reward,
+        script_pubkey: miner_pubkey_script,
+    };
+    
+    Transaction {
+        version: 1,
+        inputs: vec![coinbase_input],
+        outputs: vec![coinbase_output],
+        locktime: 0,
+    }
+}
+
+/// Calculate merkle root from transactions
+pub fn calculate_merkle_root(transactions: &[Transaction]) -> Result<BlockHash> {
+    use crate::error::Error;
+    
+    if transactions.is_empty() {
+        return Ok(BlockHash::zero());
+    }
+    
+    // Serialize and hash each transaction
+    let mut hashes: Vec<BlockHash> = transactions
+        .iter()
+        .map(|tx| {
+            let tx_bytes = bincode::serialize(tx)
+                .map_err(|_| Error::SerializationError)?;
+            Ok(sha256d(&tx_bytes))
+        })
+        .collect::<Result<Vec<BlockHash>>>()?;
+    
+    // Build merkle tree
+    while hashes.len() > 1 {
+        let mut next_level = Vec::new();
+        
+        for i in (0..hashes.len()).step_by(2) {
+            let left = &hashes[i];
+            let right = if i + 1 < hashes.len() {
+                &hashes[i + 1]
+            } else {
+                left // Duplicate last hash if odd number
+            };
+            
+            // Concatenate and hash
+            let mut combined = Vec::new();
+            combined.extend_from_slice(&left.0);
+            combined.extend_from_slice(&right.0);
+            next_level.push(sha256d(&combined));
+        }
+        
+        hashes = next_level;
+    }
+    
+    Ok(hashes[0].clone())
+}
+
+#[cfg(test)]
+mod coinbase_tests {
+    use super::*;
+    use crate::transaction::{TxInput, TxOutput};
+    use crate::types::TxHash;
+    
+    #[test]
+    fn test_create_coinbase_transaction() {
+        let miner_script = vec![0x76, 0xa9, 0x14]; // OP_DUP OP_HASH160 ...
+        let coinbase = create_coinbase_transaction(miner_script.clone(), 100, 5000);
+        
+        assert_eq!(coinbase.version, 1);
+        assert_eq!(coinbase.inputs.len(), 1);
+        assert_eq!(coinbase.outputs.len(), 1);
+        assert!(coinbase.is_coinbase());
+        assert_eq!(coinbase.outputs[0].amount, 5000005000); // 50 ATMN + 5000 sats fee
+        assert_eq!(coinbase.outputs[0].script_pubkey, miner_script);
+    }
+    
+    #[test]
+    fn test_merkle_root_single_tx() {
+        let tx = Transaction {
+            version: 1,
+            inputs: vec![],
+            outputs: vec![],
+            locktime: 0,
+        };
+        
+        let merkle_root = calculate_merkle_root(&[tx]).unwrap();
+        assert_ne!(merkle_root, BlockHash::zero());
+    }
+    
+    #[test]
+    fn test_merkle_root_multiple_txs() {
+        let tx1 = Transaction {
+            version: 1,
+            inputs: vec![],
+            outputs: vec![TxOutput {
+                amount: 1000000,
+                script_pubkey: vec![],
+            }],
+            locktime: 0,
+        };
+        
+        let tx2 = Transaction {
+            version: 1,
+            inputs: vec![],
+            outputs: vec![TxOutput {
+                amount: 2000000,
+                script_pubkey: vec![],
+            }],
+            locktime: 0,
+        };
+        
+        let merkle_root = calculate_merkle_root(&[tx1, tx2]).unwrap();
+        assert_ne!(merkle_root, BlockHash::zero());
+    }
+    
+    #[test]
+    fn test_merkle_root_empty() {
+        let merkle_root = calculate_merkle_root(&[]).unwrap();
+        assert_eq!(merkle_root, BlockHash::zero());
+    }
+    
+    #[test]
+    fn test_coinbase_block_height() {
+        let miner_script = vec![0x76];
+        let coinbase = create_coinbase_transaction(miner_script, 12345, 0);
+        
+        // Block height should be in the input script
+        let height_bytes = 12345u64.to_le_bytes();
+        assert_eq!(coinbase.inputs[0].script, height_bytes.to_vec());
     }
 }

@@ -190,3 +190,167 @@ pub async fn get_pool_statistics(pool: &SqlitePool) -> Result<serde_json::Value>
     
     Ok(serde_json::from_str(&stats)?)
 }
+
+// UTXO and Double-Spend Prevention
+pub async fn check_utxo_exists(
+    pool: &SqlitePool,
+    tx_hash: &str,
+    output_index: i32,
+) -> Result<bool> {
+    let result = sqlx::query_scalar::<_, i64>(
+        "SELECT COUNT(*) FROM utxos WHERE tx_hash = ? AND output_index = ? AND is_spent = 0"
+    )
+    .bind(tx_hash)
+    .bind(output_index)
+    .fetch_one(pool)
+    .await?;
+    
+    Ok(result > 0)
+}
+
+pub async fn get_utxo_amount(
+    pool: &SqlitePool,
+    tx_hash: &str,
+    output_index: i32,
+) -> Result<Option<f64>> {
+    let result = sqlx::query_scalar::<_, Option<f64>>(
+        "SELECT amount FROM utxos WHERE tx_hash = ? AND output_index = ? AND is_spent = 0"
+    )
+    .bind(tx_hash)
+    .bind(output_index)
+    .fetch_one(pool)
+    .await?;
+    
+    Ok(result)
+}
+
+pub async fn mark_utxo_spent(
+    pool: &SqlitePool,
+    tx_hash: &str,
+    output_index: i32,
+    spending_tx_hash: &str,
+) -> Result<()> {
+    sqlx::query(
+        "UPDATE utxos SET is_spent = 1, spent_in_tx = ?, spent_at = CURRENT_TIMESTAMP 
+         WHERE tx_hash = ? AND output_index = ?"
+    )
+    .bind(spending_tx_hash)
+    .bind(tx_hash)
+    .bind(output_index)
+    .execute(pool)
+    .await?;
+    
+    Ok(())
+}
+
+pub async fn create_utxo(
+    pool: &SqlitePool,
+    tx_hash: &str,
+    output_index: i32,
+    address: &str,
+    amount: f64,
+    block_height: i64,
+) -> Result<()> {
+    sqlx::query(
+        "INSERT INTO utxos (tx_hash, output_index, address, amount, block_height, is_spent)
+         VALUES (?, ?, ?, ?, ?, 0)"
+    )
+    .bind(tx_hash)
+    .bind(output_index)
+    .bind(address)
+    .bind(amount)
+    .bind(block_height)
+    .execute(pool)
+    .await?;
+    
+    Ok(())
+}
+
+pub async fn verify_transaction_inputs(
+    pool: &SqlitePool,
+    tx_hash: &str,
+) -> Result<bool> {
+    // Get all inputs for this transaction
+    let inputs: Vec<(String, i32)> = sqlx::query_as(
+        "SELECT prev_tx_hash, prev_output_index FROM transaction_inputs WHERE tx_hash = ?"
+    )
+    .bind(tx_hash)
+    .fetch_all(pool)
+    .await?;
+    
+    // Check if this is a coinbase transaction (empty prev_tx_hash)
+    if inputs.len() == 1 && inputs[0].0 == "0000000000000000000000000000000000000000000000000000000000000000" {
+        return Ok(true); // Coinbase transactions are always valid
+    }
+    
+    // Verify each input references an unspent UTXO
+    for (prev_tx, prev_idx) in inputs {
+        if !check_utxo_exists(pool, &prev_tx, prev_idx).await? {
+            return Ok(false); // Input references non-existent or already spent UTXO
+        }
+    }
+    
+    Ok(true)
+}
+
+pub async fn check_transaction_exists(
+    pool: &SqlitePool,
+    tx_hash: &str,
+) -> Result<bool> {
+    let result = sqlx::query_scalar::<_, i64>(
+        "SELECT COUNT(*) FROM transactions WHERE tx_hash = ?"
+    )
+    .bind(tx_hash)
+    .fetch_one(pool)
+    .await?;
+    
+    Ok(result > 0)
+}
+
+pub async fn process_block_transactions(
+    pool: &SqlitePool,
+    block_height: i64,
+    tx_hashes: &[String],
+) -> Result<()> {
+    for tx_hash in tx_hashes {
+        // Skip if transaction already processed
+        if check_transaction_exists(pool, tx_hash).await? {
+            continue;
+        }
+        
+        // Verify all inputs are valid
+        if !verify_transaction_inputs(pool, tx_hash).await? {
+            return Err(anyhow::anyhow!("Invalid transaction inputs in {}", tx_hash));
+        }
+        
+        // Mark input UTXOs as spent
+        let inputs: Vec<(String, i32)> = sqlx::query_as(
+            "SELECT prev_tx_hash, prev_output_index FROM transaction_inputs WHERE tx_hash = ?"
+        )
+        .bind(tx_hash)
+        .fetch_all(pool)
+        .await?;
+        
+        for (prev_tx, prev_idx) in inputs {
+            // Skip coinbase inputs
+            if prev_tx == "0000000000000000000000000000000000000000000000000000000000000000" {
+                continue;
+            }
+            mark_utxo_spent(pool, &prev_tx, prev_idx, tx_hash).await?;
+        }
+        
+        // Create new UTXOs for outputs
+        let outputs: Vec<(i32, String, f64)> = sqlx::query_as(
+            "SELECT output_index, address, amount FROM transaction_outputs WHERE tx_hash = ?"
+        )
+        .bind(tx_hash)
+        .fetch_all(pool)
+        .await?;
+        
+        for (output_idx, address, amount) in outputs {
+            create_utxo(pool, tx_hash, output_idx, &address, amount, block_height).await?;
+        }
+    }
+    
+    Ok(())
+}
