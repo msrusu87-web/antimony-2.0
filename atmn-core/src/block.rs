@@ -4,6 +4,7 @@
 use serde::{Deserialize, Serialize};
 use crate::types::{BlockHash, BlockHeight, Amount, Timestamp, Nonce};
 use crate::transaction::Transaction;
+use crate::consensus::sha256d;
 use crate::error::Result;
 
 /// Block Header
@@ -15,6 +16,26 @@ pub struct BlockHeader {
     pub timestamp: Timestamp,
     pub bits: u32,
     pub nonce: Nonce,
+}
+
+impl BlockHeader {
+    /// Serialize header for hashing
+    pub fn serialize(&self) -> Vec<u8> {
+        let mut bytes = Vec::with_capacity(84);
+        bytes.extend_from_slice(&self.version.to_le_bytes());
+        bytes.extend_from_slice(&self.prev_block_hash.0);
+        bytes.extend_from_slice(&self.merkle_root.0);
+        bytes.extend_from_slice(&self.timestamp.to_le_bytes());
+        bytes.extend_from_slice(&self.bits.to_le_bytes());
+        bytes.extend_from_slice(&self.nonce.to_le_bytes());
+        bytes
+    }
+
+    /// Hash the block header
+    pub fn hash(&self) -> BlockHash {
+        let bytes = self.serialize();
+        sha256d(&bytes)
+    }
 }
 
 /// Block - Header + Transactions
@@ -51,24 +72,122 @@ impl Block {
         }
     }
 
+    /// Hash the block (via header)
     pub fn hash(&self) -> BlockHash {
-        // Double SHA256 of header
-        BlockHash::zero()  // TODO: Implement hashing
+        self.header.hash()
     }
 
+    /// Calculate merkle root of transactions
     pub fn calculate_merkle_root(transactions: &[Transaction]) -> BlockHash {
-        // TODO: Implement merkle tree calculation
-        BlockHash::zero()
+        if transactions.is_empty() {
+            return BlockHash::zero();
+        }
+
+        // Hash all transactions
+        let mut hashes: Vec<BlockHash> = transactions
+            .iter()
+            .map(|tx| {
+                // Hash transaction
+                let tx_bytes = bincode::serialize(tx).unwrap_or_default();
+                sha256d(&tx_bytes)
+            })
+            .collect();
+
+        // If only one transaction, return its hash
+        if hashes.len() == 1 {
+            return hashes[0].clone();
+        }
+
+        // Build merkle tree bottom-up
+        while hashes.len() > 1 {
+            let mut next_level = Vec::new();
+
+            // Process pairs
+            for i in (0..hashes.len()).step_by(2) {
+                if i + 1 < hashes.len() {
+                    // Hash pair
+                    let mut combined = Vec::with_capacity(64);
+                    combined.extend_from_slice(&hashes[i].0);
+                    combined.extend_from_slice(&hashes[i + 1].0);
+                    next_level.push(sha256d(&combined));
+                } else {
+                    // Odd number: duplicate last hash
+                    let mut combined = Vec::with_capacity(64);
+                    combined.extend_from_slice(&hashes[i].0);
+                    combined.extend_from_slice(&hashes[i].0);
+                    next_level.push(sha256d(&combined));
+                }
+            }
+
+            hashes = next_level;
+        }
+
+        hashes[0].clone()
     }
 
+    /// Validate block structure and transactions
     pub fn is_valid(&self) -> Result<()> {
-        // TODO: Implement block validation
+        // 1. Check block hash matches header
+        let computed_hash = self.header.hash();
+        
+        // 2. Check merkle root matches transactions
+        let computed_merkle = Self::calculate_merkle_root(&self.transactions);
+        if computed_merkle != self.header.merkle_root {
+            return Err(crate::error::Error::InvalidBlock(
+                "Merkle root mismatch".to_string()
+            ));
+        }
+
+        // 3. Check timestamp is reasonable (not too far in future)
+        let now = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap()
+            .as_secs() as u32;
+        
+        if self.header.timestamp > now + 7200 {
+            return Err(crate::error::Error::InvalidBlock(
+                "Block timestamp too far in future".to_string()
+            ));
+        }
+
+        // 4. Check at least one transaction (coinbase)
+        if self.transactions.is_empty() {
+            return Err(crate::error::Error::InvalidBlock(
+                "Block has no transactions".to_string()
+            ));
+        }
+
+        // 5. Validate each transaction
+        for tx in &self.transactions {
+            tx.is_valid()?;
+        }
+
         Ok(())
     }
 
+    /// Get block reward for this height
     pub fn get_block_reward(&self) -> Amount {
-        // TODO: Get from chain params
-        50 * 100_000_000  // 50 ATMN
+        // Block reward halves every 210,000 blocks (like Bitcoin)
+        let halvings = self.height / 210_000;
+        
+        if halvings >= 64 {
+            return 0; // All coins mined
+        }
+
+        let initial_reward: Amount = 50 * 100_000_000; // 50 ATMN
+        initial_reward >> halvings // Divide by 2^halvings
+    }
+
+    /// Create coinbase transaction for this block
+    pub fn create_coinbase_tx(height: BlockHeight, miner_address: &str, block_reward: Amount) -> Transaction {
+        // TODO: Implement full coinbase transaction
+        // For now, create a simple transaction structure
+        Transaction {
+            version: 1,
+            inputs: vec![],  // Coinbase has no inputs
+            outputs: vec![], // TODO: Create output to miner_address
+            locktime: 0,
+        }
     }
 }
 
@@ -87,5 +206,48 @@ mod tests {
             0,
         );
         assert_eq!(block.height, 0);
+    }
+
+    #[test]
+    fn test_block_hash() {
+        let block = Block::new(
+            1,
+            BlockHash::zero(),
+            vec![],
+            1704067200,
+            0x1d00ffff,
+            0,
+        );
+        let hash = block.hash();
+        assert_ne!(hash, BlockHash::zero());
+    }
+
+    #[test]
+    fn test_merkle_root_empty() {
+        let merkle = Block::calculate_merkle_root(&[]);
+        assert_eq!(merkle, BlockHash::zero());
+    }
+
+    #[test]
+    fn test_block_reward() {
+        let block = Block::new(1, BlockHash::zero(), vec![], 1704067200, 0x1d00ffff, 0);
+        assert_eq!(block.get_block_reward(), 50 * 100_000_000);
+        
+        let block2 = Block::new(1, BlockHash::zero(), vec![], 1704067200, 0x1d00ffff, 210_000);
+        assert_eq!(block2.get_block_reward(), 25 * 100_000_000);
+    }
+
+    #[test]
+    fn test_header_serialization() {
+        let header = BlockHeader {
+            version: 1,
+            prev_block_hash: BlockHash::zero(),
+            merkle_root: BlockHash::zero(),
+            timestamp: 1704067200,
+            bits: 0x1d00ffff,
+            nonce: 12345,
+        };
+        let bytes = header.serialize();
+        assert_eq!(bytes.len(), 84);
     }
 }

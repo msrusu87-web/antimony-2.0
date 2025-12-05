@@ -8,6 +8,7 @@ pub enum Error {
     // Blockchain errors
     InvalidBlockHeight(u64),
     InvalidBlockHash,
+    InvalidBlock(String),
     InvalidTransaction,
     InvalidBlockReward,
     InvalidDifficulty,
@@ -38,6 +39,7 @@ impl fmt::Display for Error {
         match self {
             Error::InvalidBlockHeight(h) => write!(f, "Invalid block height: {}", h),
             Error::InvalidBlockHash => write!(f, "Invalid block hash"),
+            Error::InvalidBlock(msg) => write!(f, "Invalid block: {}", msg),
             Error::InvalidTransaction => write!(f, "Invalid transaction"),
             Error::InvalidBlockReward => write!(f, "Invalid block reward"),
             Error::InvalidDifficulty => write!(f, "Invalid difficulty"),

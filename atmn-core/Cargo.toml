@@ -39,6 +39,7 @@ anyhow = "1.0"
 tracing = "0.1"
 tracing-subscriber = "0.3"
 chrono = "0.4"
+num_cpus = "1.16"
 
 # Testing
 proptest = "1.4"
@@ -54,3 +55,7 @@ codegen-units = 1
 
 [profile.dev]
 opt-level = 0
+
+[[bin]]
+name = "atmn-miner"
+path = "bin/miner.rs"

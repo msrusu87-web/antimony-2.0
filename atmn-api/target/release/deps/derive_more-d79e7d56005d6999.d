@@ -1,0 +1,11 @@
+/home/ubuntu/atmn-2.0/atmn-api/target/release/deps/derive_more-d79e7d56005d6999.d: /home/ubuntu/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/derive_more-2.1.0/src/lib.rs /home/ubuntu/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/derive_more-2.1.0/src/as.rs /home/ubuntu/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/derive_more-2.1.0/src/vendor/mod.rs /home/ubuntu/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/derive_more-2.1.0/src/vendor/thiserror/mod.rs /home/ubuntu/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/derive_more-2.1.0/src/vendor/thiserror/aserror.rs
+
+/home/ubuntu/atmn-2.0/atmn-api/target/release/deps/libderive_more-d79e7d56005d6999.rlib: /home/ubuntu/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/derive_more-2.1.0/src/lib.rs /home/ubuntu/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/derive_more-2.1.0/src/as.rs /home/ubuntu/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/derive_more-2.1.0/src/vendor/mod.rs /home/ubuntu/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/derive_more-2.1.0/src/vendor/thiserror/mod.rs /home/ubuntu/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/derive_more-2.1.0/src/vendor/thiserror/aserror.rs
+
+/home/ubuntu/atmn-2.0/atmn-api/target/release/deps/libderive_more-d79e7d56005d6999.rmeta: /home/ubuntu/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/derive_more-2.1.0/src/lib.rs /home/ubuntu/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/derive_more-2.1.0/src/as.rs /home/ubuntu/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/derive_more-2.1.0/src/vendor/mod.rs /home/ubuntu/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/derive_more-2.1.0/src/vendor/thiserror/mod.rs /home/ubuntu/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/derive_more-2.1.0/src/vendor/thiserror/aserror.rs
+
+/home/ubuntu/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/derive_more-2.1.0/src/lib.rs:
+/home/ubuntu/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/derive_more-2.1.0/src/as.rs:
+/home/ubuntu/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/derive_more-2.1.0/src/vendor/mod.rs:
+/home/ubuntu/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/derive_more-2.1.0/src/vendor/thiserror/mod.rs:
+/home/ubuntu/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/derive_more-2.1.0/src/vendor/thiserror/aserror.rs:

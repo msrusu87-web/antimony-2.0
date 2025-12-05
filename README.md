@@ -79,11 +79,17 @@ Antimony Coin 2.0 is a high-performance blockchain designed for:
   - Mining worker management
   - Fee transaction audit trail
 
-### 🚧 IN PROGRESS (Phase 2d):
-- Account balance endpoints (/account/balance, /account/coins)
-- Address-to-UTXO indexing optimization
-- Mempool implementation
-- Enhanced transaction lookup
+### ✅ COMPLETED (Phase 2d):
+- Account balance endpoints (/account/balance, /account/coins) ✅
+- Address-to-UTXO indexing with caching ✅
+- Multi-wallet support per user ✅
+- 2FA management in dashboard ✅
+
+### 🚧 IN PROGRESS (Phase 3):
+- P2P networking protocol
+- Node discovery and peer management
+- Block propagation layer
+- Transaction mempool with fee prioritization
 
 ### 📋 MAINNET REQUIREMENTS (Phase 3):
 **Critical for Mainnet Launch:**
@@ -202,11 +208,21 @@ Antimony Coin 2.0 is a high-performance blockchain designed for:
   - Mining worker records
   - Pool statistics
 
-### 🚧 Phase 2d: Account Balance APIs (IN PROGRESS)
-- Address-to-UTXO indexing
-- /account/balance endpoint
-- /account/coins endpoint
-- **ETA: 2-3 hours**
+### ✅ Phase 2d: Account Balance APIs (COMPLETE)
+- Address-to-UTXO indexing with address_balances cache ✅
+- GET /account/balance/{address} - Returns balance, UTXO count, last_updated ✅
+- GET /account/coins/{address} - Lists unspent UTXOs ✅
+- POST /account/utxo/add - Add UTXO when transaction confirmed ✅
+- POST /account/utxo/spend - Mark UTXO as spent ✅
+- Database tables: `utxos`, `address_balances` ✅
+- **Completed: December 5, 2025**
+
+### 🚧 Phase 3: P2P Networking & Consensus (IN PROGRESS)
+- Node discovery protocol (bootstrap nodes, peer list)
+- Block propagation (announce, request, validate)
+- Transaction broadcasting and mempool
+- Full node implementation (atmn-node)
+- **ETA: 5-7 days**
 
 ---
 

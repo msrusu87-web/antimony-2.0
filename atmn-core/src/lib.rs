@@ -9,6 +9,7 @@ pub mod transaction;
 pub mod block;
 pub mod error;
 pub mod types;
+pub mod miner;
 
 pub use chain_params::ChainParams;
 pub use consensus::{Consensus, ProofOfWork};
@@ -17,6 +18,7 @@ pub use storage::Storage;
 pub use transaction::Transaction;
 pub use block::Block;
 pub use error::{Error, Result};
+pub use miner::{Miner, MinerConfig, BlockTemplate, MiningResult, MiningStats};
 
 /// ATMN Core Library Version
 pub const VERSION: &str = "0.1.0";
