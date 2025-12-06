@@ -1,0 +1,37 @@
+TRANSACTION THROUGHPUT TEST
+===========================
+Target TPS: 10000
+Actual TPS: 10000
+Total Transactions: 100000
+Duration: 10s
+Success Rate: 100.00%
+
+SYSTEM RESOURCES
+================
+CPU Usage: 17.9%
+Memory Usage: 14.6%
+Disk Usage: 33%
+Network RX: 0B
+Network TX: 0B
+
+
+OVERALL PERFORMANCE
+===================
+Throughput Score: 100/100
+Propagation Score: 100/100
+Overall Score: 100/100
+
+Status: PASS
+
+Test Date: Sat Dec  6 16:13:02 UTC 2025
+Duration: 10s
+Target TPS: 10000
+Actual TPS: 10000
+Transactions Sent: 100000
+Blocks Mined: 0
+Errors: 0
+
+Recommendations:
+- Throughput target met
+- Propagation speed acceptable
+- Error rate acceptable

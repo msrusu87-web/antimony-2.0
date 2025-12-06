@@ -1,0 +1,114 @@
+[1;33m[1/7] Testing P2P Protocol Security[0m
+
+[0;31m✗ Handshake validation[0m
+  No handshake validation found
+
+[0;31m✗ Peer authentication[0m
+  No peer authentication found
+
+[0;32m✓ Message size limits[0m
+  Size limits defined
+
+[0;32m✓ Connection limits[0m
+  Peer connection limits exist
+
+[0;31m✗ Malformed message handling[0m
+  No error handling for bad messages
+
+[1;33m[2/7] Testing Rate Limiting[0m
+
+[0;32m✓ API rate limiting[0m
+  Rate limiting code found
+
+[0;31m✗ P2P rate limiting[0m
+  No P2P rate limiting
+
+[0;31m✗ Connection rate limiting[0m
+  No connection rate limiting
+
+[1;33m[3/7] Testing DDoS Protection[0m
+
+[0;31m✗ IP blacklisting[0m
+  No IP blacklisting
+
+[0;32m✓ Peer reputation[0m
+  Reputation system found
+
+[0;31m✗ Flood protection[0m
+  No flood protection
+
+[1;33m[4/7] Testing Cryptographic Security[0m
+
+[0;32m✓ SHA-256d implementation[0m
+  Double SHA-256 hashing used
+
+[0;31m✗ Secure RNG[0m
+  No secure RNG found
+
+[0;31m✗ Private key handling[0m
+  No private key protection
+
+[1;33m[5/7] Testing Input Validation[0m
+
+[0;31m✗ Address validation[0m
+  No address validation
+
+[0;32m✓ Transaction validation[0m
+  TX validation logic found
+
+[0;32m✓ Block validation[0m
+  Block validation exists
+
+[0;31m✗ Double-spend prevention[0m
+  No double-spend protection
+
+[1;33m[6/7] Testing Database Security[0m
+
+[0;32m✓ SQL injection protection[0m
+  Prepared statements used
+
+[0;31m✗ DB access control[0m
+  No DB authentication
+
+[0;31m✗ Data encryption[0m
+  No encryption at rest
+
+[1;33m[7/7] Testing API Security[0m
+
+[0;32m✓ API authentication[0m
+  Auth mechanism found
+
+[0;32m✓ CORS configuration[0m
+  CORS configured
+
+[0;31m✗ HTTPS/TLS[0m
+  No TLS configuration
+
+[0;31m✗ Input sanitization[0m
+  No input sanitization
+
+[0;34m============================================[0m
+[0;34mSECURITY AUDIT SUMMARY[0m
+[0;34m============================================[0m
+
+Date: Sat Dec  6 16:09:47 UTC 2025
+ATMN Version: 2.0.0
+
+[1;33mTest Results:[0m
+  Total Tests: 25
+  Passed: 10
+  Failed: 15
+  Success Rate: 40.0%
+
+[0;31m✗ Critical security issues found[0m
+[0;31m✗ DO NOT deploy to mainnet[0m
+
+[1;33mRecommendations:[0m
+  1. Implement rate limiting for all APIs
+  2. Add peer reputation system
+  3. Enable DDoS protection
+  4. Conduct penetration testing
+  5. External security audit
+
+Report saved to: security_audit_report_20251206_160947.txt
+[0;34m============================================[0m
