@@ -10,6 +10,8 @@ pub mod block;
 pub mod error;
 pub mod types;
 pub mod miner;
+pub mod miner_mt;
+pub mod difficulty;
 pub mod mempool;
 pub mod genesis;
 
@@ -21,6 +23,7 @@ pub use transaction::Transaction;
 pub use block::Block;
 pub use error::{Error, Result};
 pub use miner::{Miner, MinerConfig, BlockTemplate, MiningResult, MiningStats};
+pub use miner_mt::MultiThreadedMiner;
 pub use mempool::{Mempool, MempoolConfig, MempoolStats};
 pub use genesis::{create_genesis_block, initialize_genesis};
 
@@ -69,3 +72,4 @@ mod tests {
         assert_eq!(VERSION, "0.1.0");
     }
 }
+pub mod tx_builder;

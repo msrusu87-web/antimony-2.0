@@ -22,6 +22,7 @@ blake2 = "0.10"
 # Serialization
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
+log = "0.4"
 bincode = "1.3"
 
 # Database
@@ -59,3 +60,40 @@ opt-level = 0
 [[bin]]
 name = "atmn-miner"
 path = "bin/miner.rs"
+
+[[bin]]
+name = "mine-production"
+path = "bin/mine_production.rs"
+
+[[bin]]
+name = "verify-blocks"
+path = "bin/verify_blocks.rs"
+
+[[bin]]
+name = "sync-to-sqlite"
+path = "bin/sync_to_sqlite.rs"
+
+[dependencies.rusqlite]
+version = "0.30"
+features = ["bundled"]
+
+
+[[bin]]
+name = "check-balance"
+path = "bin/check_balance.rs"
+
+[[bin]]
+name = "create-transaction"
+path = "bin/create_transaction.rs"
+
+[[bin]]
+name = "submit-transaction"
+path = "bin/submit_transaction.rs"
+
+[[bin]]
+name = "mine-to-height"
+path = "bin/mine_to_height.rs"
+
+[[bin]]
+name = "mempool-manager"
+path = "bin/mempool_manager.rs"

@@ -354,3 +354,179 @@ pub async fn process_block_transactions(
     
     Ok(())
 }
+
+// Blockchain query operations
+
+/// Get the current blockchain height (highest block number)
+pub async fn get_current_height(pool: &SqlitePool) -> Result<u64> {
+    let result = sqlx::query_scalar::<_, i64>(
+        "SELECT COALESCE(MAX(height), 0) FROM blocks"
+    )
+    .fetch_one(pool)
+    .await?;
+    
+    Ok(result as u64)
+}
+
+/// Get block by height
+pub async fn get_block_by_height(pool: &SqlitePool, height: u64) -> Result<serde_json::Value> {
+    let result: (String, i64, i64, i64, i64, Option<String>, Option<String>) = sqlx::query_as(
+        "SELECT hash, height, timestamp, difficulty, nonce, prev_hash, merkle_root 
+         FROM blocks WHERE height = ?"
+    )
+    .bind(height as i64)
+    .fetch_one(pool)
+    .await?;
+    
+    Ok(serde_json::json!({
+        "hash": result.0,
+        "height": result.1,
+        "timestamp": result.2,
+        "difficulty": result.3,
+        "nonce": result.4,
+        "prev_hash": result.5,
+        "merkle_root": result.6
+    }))
+}
+
+
+/// Calculate total fees in a set of transactions
+pub async fn calculate_transaction_fees(pool: &SqlitePool, tx_hashes: &[String]) -> Result<f64> {
+    let mut total_fees = 0.0;
+    
+    for tx_hash in tx_hashes {
+        // Get transaction inputs total
+        let input_total: Option<f64> = sqlx::query_scalar(
+            "SELECT COALESCE(SUM(amount), 0) FROM transaction_inputs WHERE tx_hash = ?"
+        )
+        .bind(tx_hash)
+        .fetch_one(pool)
+        .await?;
+        
+        // Get transaction outputs total
+        let output_total: Option<f64> = sqlx::query_scalar(
+            "SELECT COALESCE(SUM(amount), 0) FROM transaction_outputs WHERE tx_hash = ?"
+        )
+        .bind(tx_hash)
+        .fetch_one(pool)
+        .await?;
+        
+        // Fee = inputs - outputs
+        let fee = input_total.unwrap_or(0.0) - output_total.unwrap_or(0.0);
+        if fee > 0.0 {
+            total_fees += fee;
+        }
+    }
+    
+    Ok(total_fees)
+}
+
+/// Extract coinbase transaction amount from block
+pub async fn get_coinbase_amount(pool: &SqlitePool, block_hash: &str) -> Result<f64> {
+    // Get the first transaction in the block (coinbase)
+    let amount: Option<f64> = sqlx::query_scalar(
+        "SELECT COALESCE(SUM(amount), 0) FROM transaction_outputs 
+         WHERE tx_hash IN (
+             SELECT tx_hash FROM transactions WHERE block_hash = ? ORDER BY tx_index LIMIT 1
+         )"
+    )
+    .bind(block_hash)
+    .fetch_one(pool)
+    .await?;
+    
+    Ok(amount.unwrap_or(0.0))
+}
+
+/// Get block timestamp by height for difficulty adjustment
+pub async fn get_block_timestamp(pool: &SqlitePool, height: u64) -> Result<u32> {
+    let timestamp: Option<i64> = sqlx::query_scalar(
+        "SELECT timestamp FROM blocks WHERE height = ?"
+    )
+    .bind(height as i64)
+    .fetch_optional(pool)
+    .await?;
+    
+    Ok(timestamp.unwrap_or(0) as u32)
+}
+
+/// Get blocks for difficulty calculation (last 2016 blocks)
+pub async fn get_blocks_for_difficulty(pool: &SqlitePool, end_height: u64) -> Result<Vec<(u64, u32)>> {
+    let start_height = end_height.saturating_sub(2015);
+    
+    let blocks: Vec<(i64, i64)> = sqlx::query_as(
+        "SELECT height, timestamp FROM blocks 
+         WHERE height >= ? AND height <= ?
+         ORDER BY height ASC"
+    )
+    .bind(start_height as i64)
+    .bind(end_height as i64)
+    .fetch_all(pool)
+    .await?;
+    
+    Ok(blocks.iter().map(|(h, t)| (*h as u64, *t as u32)).collect())
+}
+
+// Batch operations for performance
+pub async fn batch_create_utxos(
+    pool: &SqlitePool,
+    utxos: Vec<(String, String, u32, f64, i64)>,
+) -> Result<()> {
+    let mut tx = pool.begin().await?;
+    
+    for (tx_hash, address, output_index, amount, block_height) in utxos {
+        sqlx::query(
+            "INSERT INTO utxos (tx_hash, address, output_index, amount, block_height, spent) 
+             VALUES (?, ?, ?, ?, ?, 0)"
+        )
+        .bind(&tx_hash)
+        .bind(&address)
+        .bind(output_index)
+        .bind(amount)
+        .bind(block_height)
+        .execute(&mut *tx)
+        .await?;
+    }
+    
+    tx.commit().await?;
+    Ok(())
+}
+
+pub async fn batch_spend_utxos(
+    pool: &SqlitePool,
+    utxos: Vec<(String, u32)>,
+) -> Result<()> {
+    let mut tx = pool.begin().await?;
+    
+    for (tx_hash, output_index) in utxos {
+        sqlx::query(
+            "UPDATE utxos SET spent = 1 WHERE tx_hash = ? AND output_index = ?"
+        )
+        .bind(&tx_hash)
+        .bind(output_index)
+        .execute(&mut *tx)
+        .await?;
+    }
+    
+    tx.commit().await?;
+    Ok(())
+}
+
+pub async fn get_utxos_for_address(
+    pool: &SqlitePool,
+    address: &str,
+    limit: i64,
+) -> Result<Vec<(String, u32, f64)>> {
+    let utxos = sqlx::query_as::<_, (String, u32, f64)>(
+        "SELECT tx_hash, output_index, amount 
+         FROM utxos 
+         WHERE address = ? AND spent = 0 
+         ORDER BY amount DESC 
+         LIMIT ?"
+    )
+    .bind(address)
+    .bind(limit)
+    .fetch_all(pool)
+    .await?;
+    
+    Ok(utxos)
+}

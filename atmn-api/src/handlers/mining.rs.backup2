@@ -4,7 +4,6 @@ use serde::{Deserialize, Serialize};
 use crate::models::ErrorResponse;
 use crate::mining_manager::MiningManager;
 use crate::db;
-use crate::coinbase;
 use std::sync::Arc;
 
 #[derive(Debug, Deserialize)]
@@ -211,7 +210,6 @@ pub async fn get_block_template(
 }
 
 /// Submit mined block
-/// Submit mined block with coinbase validation
 pub async fn submit_block(
     pool: web::Data<SqlitePool>,
     mining_manager: web::Data<Arc<MiningManager>>,
@@ -227,20 +225,6 @@ pub async fn submit_block(
         });
     }
 
-    // Get current blockchain height
-    let block_height = match db::get_current_height(pool.get_ref()).await {
-        Ok(height) => height + 1, // Next block
-        Err(e) => {
-            log::error!("Failed to get current height: {}", e);
-            return HttpResponse::InternalServerError().json(ErrorResponse {
-                error: "DATABASE_ERROR".to_string(),
-                message: "Failed to query blockchain height".to_string(),
-            });
-        }
-    };
-
-    log::info!("Validating block at height {}", block_height);
-
     // TODO: Parse block_data to extract transactions
     // For now, we'll implement the validation framework
     
@@ -248,35 +232,6 @@ pub async fn submit_block(
     // In a real implementation, you would parse the block structure
     let tx_hashes: Vec<String> = vec![]; // Parse from req.block_data
     
-    // Calculate total transaction fees
-    let total_fees = match db::calculate_transaction_fees(pool.get_ref(), &tx_hashes).await {
-        Ok(fees) => fees,
-        Err(e) => {
-            log::error!("Failed to calculate transaction fees: {}", e);
-            0.0 // Assume no fees if calculation fails
-        }
-    };
-
-    // Extract coinbase amount from block_data
-    // TODO: Parse actual coinbase from block_data
-    // For now, we use a placeholder
-    let coinbase_amount = 50.0; // This should be parsed from block_data
-
-    // Validate coinbase reward
-    match coinbase::validate_coinbase_reward(block_height, coinbase_amount, total_fees) {
-        Ok(_) => {
-            log::info!("Coinbase validation passed: {} ATMN at height {}", 
-                      coinbase_amount, block_height);
-        }
-        Err(e) => {
-            log::warn!("Coinbase validation failed: {}", e);
-            return HttpResponse::BadRequest().json(ErrorResponse {
-                error: "INVALID_COINBASE".to_string(),
-                message: format!("Coinbase validation failed: {}", e),
-            });
-        }
-    }
-
     // Validate all transactions before accepting the block
     for tx_hash in &tx_hashes {
         // Check if transaction already exists (replay attack prevention)
@@ -320,22 +275,19 @@ pub async fn submit_block(
         }
     }
     
-    // If we get here, all validation passed (including coinbase)
+    // If we get here, all validation passed
     // Process the block: mark UTXOs as spent and create new ones
-    match db::process_block_transactions(pool.get_ref(), (block_height as i64), &tx_hashes).await {
+    let block_height = 0; // TODO: Get actual block height from database
+    
+    match db::process_block_transactions(pool.get_ref(), block_height, &tx_hashes).await {
         Ok(_) => {
-            let expected_reward = coinbase::calculate_block_reward(block_height);
-            log::info!("Block accepted and processed! Hash: {}, Height: {}, Reward: {}", 
-                      req.hash, block_height, expected_reward);
-            
+            log::info!("Block accepted and processed! Hash: {}", req.hash);
             HttpResponse::Ok().json(serde_json::json!({
                 "success": true,
                 "message": "Block accepted",
                 "hash": req.hash,
                 "height": block_height,
-                "reward": expected_reward,
-                "fees": total_fees,
-                "total_payout": expected_reward + total_fees
+                "reward": 50.0
             }))
         }
         Err(e) => {
@@ -347,6 +299,7 @@ pub async fn submit_block(
         }
     }
 }
+
 
 
 /// Get mempool statistics

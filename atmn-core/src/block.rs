@@ -180,12 +180,27 @@ impl Block {
 
     /// Create coinbase transaction for this block
     pub fn create_coinbase_tx(height: BlockHeight, miner_address: &str, block_reward: Amount) -> Transaction {
-        // TODO: Implement full coinbase transaction
-        // For now, create a simple transaction structure
+        use crate::transaction::{TxInput, TxOutput};
+        use crate::types::TxHash;
+        
+        // Coinbase input (no previous tx)
+        let coinbase_input = TxInput {
+            prev_tx_hash: TxHash::from_bytes([0u8; 32]),
+            prev_tx_index: 0xFFFFFFFF,
+            script: height.to_le_bytes().to_vec(), // Block height in script
+            sequence: 0xFFFFFFFF,
+        };
+        
+        // Output to miner
+        let coinbase_output = TxOutput {
+            amount: block_reward,
+            script_pubkey: miner_address.as_bytes().to_vec(), // Simple address encoding
+        };
+        
         Transaction {
             version: 1,
-            inputs: vec![],  // Coinbase has no inputs
-            outputs: vec![], // TODO: Create output to miner_address
+            inputs: vec![coinbase_input],
+            outputs: vec![coinbase_output],
             locktime: 0,
         }
     }
@@ -248,6 +263,7 @@ mod tests {
             nonce: 12345,
         };
         let bytes = header.serialize();
-        assert_eq!(bytes.len(), 84);
+        // BlockHeader size: version(4) + prev_hash(32) + merkle(32) + timestamp(4) + bits(4) + nonce(4) = 80 bytes
+        assert_eq!(bytes.len(), 80);
     }
 }

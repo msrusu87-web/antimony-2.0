@@ -194,6 +194,16 @@ impl Mempool {
             max_size: self.config.max_size,
         }
     }
+    
+    /// Get number of transactions in mempool
+    pub fn size(&self) -> usize {
+        self.transactions.len()
+    }
+    
+    /// Get transactions for block inclusion (up to limit)
+    pub fn get_transactions(&self, limit: usize) -> Result<Vec<Transaction>> {
+        Ok(self.get_ordered_transactions(limit))
+    }
 
     /// Validate transaction
     fn validate_transaction(&self, tx: &Transaction) -> Result<()> {

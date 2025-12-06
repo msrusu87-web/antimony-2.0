@@ -16,6 +16,7 @@ const CF_ADDRESS_INDEX: &str = "address_index";  // address -> list of UTXO keys
 const CF_METADATA: &str = "metadata";
 
 /// Storage manager for blockchain data
+#[derive(Clone)]
 pub struct Storage {
     db: Arc<DB>,
 }
@@ -187,8 +188,8 @@ impl Storage {
             self.db.put_cf(cf_utxos, utxo_key.as_bytes(), utxo_data.clone())
                 .map_err(|e| Error::DatabaseError(e.to_string()))?;
             
-            // Extract address from script_pubkey (simplified - just use hash of script)
-            let address = format!("addr_{:x}", output.amount.wrapping_mul(31));  // Simple deterministic addr
+            // Extract address from script_pubkey (it's encoded as address bytes)
+            let address = String::from_utf8_lossy(&output.script_pubkey).to_string();
             
             // Add to address index
             self.add_to_address_index(&cf_addr_idx, &address, &utxo_key)?;

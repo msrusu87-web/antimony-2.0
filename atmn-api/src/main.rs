@@ -3,6 +3,9 @@ mod errors;
 mod handlers;
 mod models;
 mod mining_manager;
+mod coinbase;
+mod rate_limiter;
+mod websocket;
 
 use actix_web::{web, App, HttpServer, middleware::Logger};
 use actix_cors::Cors;
@@ -78,6 +81,14 @@ async fn main() -> std::io::Result<()> {
             .route("/api/mining/template", web::get().to(handlers::mining::get_block_template))
             .route("/api/mining/submit", web::post().to(handlers::mining::submit_block))
             .route("/api/mempool/stats", web::get().to(handlers::mining::get_mempool_stats))
+            // Blockchain query endpoints (NEW)
+            .route("/api/blocks/latest", web::get().to(handlers::blockchain::get_latest_blocks))
+            .route("/api/blocks/range", web::get().to(handlers::blockchain::get_block_range))
+            .route("/api/blocks/{height}", web::get().to(handlers::blockchain::get_block_by_height))
+            .route("/api/address/{address}/balance", web::get().to(handlers::blockchain::get_address_balance))
+            .route("/api/address/{address}/transactions", web::get().to(handlers::blockchain::get_address_transactions))
+            .route("/api/blockchain/stats", web::get().to(handlers::blockchain::get_blockchain_stats))
+        .route("/ws", web::get().to(websocket::websocket_handler))
             // Fee collection endpoints
             .route("/api/fees/collect", web::post().to(handlers::fees::collect_fee))
             .route("/api/fees/master-wallet", web::get().to(handlers::fees::get_master_wallet_stats))
